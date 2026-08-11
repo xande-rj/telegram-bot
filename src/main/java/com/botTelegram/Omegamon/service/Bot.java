@@ -44,4 +44,16 @@ public class Bot {
                 .retrieve()
                 .body(TelegramResponse .class);
     }
+    public void sendMessage(Long chatId, String message) {
+
+        restClient
+                .get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/sendMessage")
+                        .queryParam("chat_id", chatId)
+                        .queryParam("text", message)
+                        .build())
+                .retrieve()
+                .toBodilessEntity();
+    }
 }
