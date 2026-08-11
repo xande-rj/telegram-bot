@@ -1,8 +1,10 @@
 package com.botTelegram.Omegamon.service;
 
 import com.botTelegram.Omegamon.response.TelegramResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import com.botTelegram.Omegamon.response.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -11,17 +13,26 @@ public class Bot {
 
     private final RestClient restClient;
     private final String chatId;
+    private final String lat;
+    private final String lon;
+    private final String appid;
 
     public Bot(
             RestClient.Builder builder,
             @Value("${telegram.token}") String token,
-            @Value("${chat.id}") String chatId
+            @Value("${chat.id}") String chatId,
+            @Value("${latitude}") String lat,
+            @Value("${longitude}") String lon,
+            @Value("${appid}") String appid
     ) {
         this.restClient = builder
                 .baseUrl("https://api.telegram.org/bot" + token)
                 .build();
 
         this.chatId = chatId;
+        this.lat = lat;
+        this.lon = lon;
+        this.appid = appid;
     }
 
     public void verify(String message) {
@@ -36,14 +47,23 @@ public class Bot {
                 .retrieve()
                 .toBodilessEntity();
     }
-    public TelegramResponse getMessages() {
 
+    public TelegramResponse getMessages(Long offset) {
         return restClient
                 .get()
-                .uri("/getUpdates")
+                .uri(uriBuilder -> uriBuilder
+                        .path("/getUpdates")
+                        .queryParam("offset",offset)
+                        .queryParam("timeout",10).build())
+
                 .retrieve()
                 .body(TelegramResponse .class);
+
+
+
     }
+
+
     public void sendMessage(Long chatId, String message) {
 
         restClient
@@ -55,5 +75,21 @@ public class Bot {
                         .build())
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    public WeatherResponse sendWeather(Long id) {
+        RestClient weatherClient = RestClient.builder()
+                .baseUrl("https://api.openweathermap.org/data/2.5")
+                .build();
+        return weatherClient.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/weather")
+                                .queryParam("lat",lat)
+                                .queryParam("lon",lon)
+                                .queryParam("appid",appid).build()
+                        ).retrieve()
+                .body(WeatherResponse.class);
+
+
     }
 }
