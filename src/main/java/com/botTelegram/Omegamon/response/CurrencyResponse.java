@@ -1,6 +1,6 @@
 package com.botTelegram.Omegamon.response;
 
-public record UsdBrl(
+public record CurrencyResponse(
         String code,
         String codein,
         String name,

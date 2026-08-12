@@ -1,9 +1,7 @@
 package com.botTelegram.Omegamon.controller;
 
-import com.botTelegram.Omegamon.response.DollarResponse;
-import com.botTelegram.Omegamon.response.TelegramResponse;
-import com.botTelegram.Omegamon.response.Update;
-import com.botTelegram.Omegamon.response.WeatherResponse;
+import com.botTelegram.Omegamon.Enum.Coins;
+import com.botTelegram.Omegamon.response.*;
 import com.botTelegram.Omegamon.service.Bot;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,15 +9,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/message")
 public class MessageController {
 
     private Long offset = 0L;
-    private String[] moedaString = new String[]{"dolar", "real", "euro", "yen"};
+    private final String[] moedasString = new String[]{"dolar", "real", "euro", "iene", "yuan"};
     @Autowired
     private Bot bot;
 
@@ -47,11 +44,13 @@ public class MessageController {
                 );
             }
 
-            for (String moeda : moedaString) {
+            for (String moeda : moedasString) {
                 if (mensagem.equalsIgnoreCase(moeda)) {
-                    DollarResponse price = bot.sendPrice();
+                    String coin = Coins.valueOf(moeda.toUpperCase()).getCoin();
+                    Map<String, CurrencyResponse> currencies = bot.sendPrice(coin);
+                    CurrencyResponse price = currencies.get(coin + "BRL");
                     String men = """
-                            💵 Dólar → Real
+                            💵 %s → Real
                             
                             💰 Compra: R$ %s
                             💰 Venda: R$ %s
@@ -59,11 +58,12 @@ public class MessageController {
                             📉 Mínima: R$ %s
                             📊 Variação: %s%%
                             """.formatted(
-                            price.usdBrl().bid(),
-                            price.usdBrl().ask(),
-                            price.usdBrl().high(),
-                            price.usdBrl().low(),
-                            price.usdBrl().pctChange());
+                            Coins.valueOf(moeda.toUpperCase()),
+                            price.bid(),
+                            price.ask(),
+                            price.high(),
+                            price.low(),
+                            price.pctChange());
 
                     bot.sendMessage(
                             update.message().chat().id(),

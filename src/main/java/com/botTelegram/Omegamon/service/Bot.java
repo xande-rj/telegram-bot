@@ -1,14 +1,17 @@
 package com.botTelegram.Omegamon.service;
 
-import com.botTelegram.Omegamon.response.DollarResponse;
+import com.botTelegram.Omegamon.response.CurrencyApiResponse;
 
+import com.botTelegram.Omegamon.response.CurrencyResponse;
 import com.botTelegram.Omegamon.response.TelegramResponse;
 
 import com.botTelegram.Omegamon.response.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
+import java.util.Map;
 
 @Service
 public class Bot {
@@ -38,15 +41,18 @@ public class Bot {
         this.lon = lon;
         this.appid = appid;
     }
-public DollarResponse sendPrice(){
+public Map<String,CurrencyResponse> sendPrice(String moeda){
     RestClient priceClient = RestClient.builder()
             .baseUrl(PRICE_URL)
             .build();
+    if (moeda.equals("BRL")) {
+        moeda = "USD";
+    }
    return priceClient
     .get()
-            .uri("/USD-BRL")
+            .uri("/{moeda}-BRL",moeda)
             .retrieve()
-           .body(DollarResponse.class);
+           .body(new ParameterizedTypeReference<Map<String, CurrencyResponse>>() {});
 
 }
 
