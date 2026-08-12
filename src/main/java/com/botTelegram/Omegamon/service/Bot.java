@@ -1,5 +1,7 @@
 package com.botTelegram.Omegamon.service;
 
+import com.botTelegram.Omegamon.response.DollarResponse;
+
 import com.botTelegram.Omegamon.response.TelegramResponse;
 
 import com.botTelegram.Omegamon.response.WeatherResponse;
@@ -16,6 +18,8 @@ public class Bot {
     private final String lat;
     private final String lon;
     private final String appid;
+    private final String WEATHER_URL = "https://api.openweathermap.org/data/2.5";
+    private final String PRICE_URL = "https://economia.awesomeapi.com.br/last";
 
     public Bot(
             RestClient.Builder builder,
@@ -34,6 +38,17 @@ public class Bot {
         this.lon = lon;
         this.appid = appid;
     }
+public DollarResponse sendPrice(){
+    RestClient priceClient = RestClient.builder()
+            .baseUrl(PRICE_URL)
+            .build();
+   return priceClient
+    .get()
+            .uri("/USD-BRL")
+            .retrieve()
+           .body(DollarResponse.class);
+
+}
 
     public void verify(String message) {
 
@@ -53,12 +68,11 @@ public class Bot {
                 .get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/getUpdates")
-                        .queryParam("offset",offset)
-                        .queryParam("timeout",10).build())
+                        .queryParam("offset", offset)
+                        .queryParam("timeout", 10).build())
 
                 .retrieve()
-                .body(TelegramResponse .class);
-
+                .body(TelegramResponse.class);
 
 
     }
@@ -77,17 +91,17 @@ public class Bot {
                 .toBodilessEntity();
     }
 
-    public WeatherResponse sendWeather(Long id) {
+    public WeatherResponse sendWeather() {
         RestClient weatherClient = RestClient.builder()
-                .baseUrl("https://api.openweathermap.org/data/2.5")
+                .baseUrl(WEATHER_URL)
                 .build();
         return weatherClient.get()
-                        .uri(uriBuilder -> uriBuilder
-                                .path("/weather")
-                                .queryParam("lat",lat)
-                                .queryParam("lon",lon)
-                                .queryParam("appid",appid).build()
-                        ).retrieve()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/weather")
+                        .queryParam("lat", lat)
+                        .queryParam("lon", lon)
+                        .queryParam("appid", appid).build()
+                ).retrieve()
                 .body(WeatherResponse.class);
 
 

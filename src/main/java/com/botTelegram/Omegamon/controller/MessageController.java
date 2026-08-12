@@ -1,5 +1,6 @@
 package com.botTelegram.Omegamon.controller;
 
+import com.botTelegram.Omegamon.response.DollarResponse;
 import com.botTelegram.Omegamon.response.TelegramResponse;
 import com.botTelegram.Omegamon.response.Update;
 import com.botTelegram.Omegamon.response.WeatherResponse;
@@ -18,16 +19,11 @@ import java.util.UUID;
 public class MessageController {
 
     private Long offset = 0L;
-
+    private String[] moedaString = new String[]{"dolar", "real", "euro", "yen"};
     @Autowired
     private Bot bot;
 
-    public void verifyBot() {
-        bot.verify("Ola verificando Bot no DATA: " + LocalDateTime.now().toString() + ", " + UUID.randomUUID().toString());
-    }
-
-
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 5000)
     public void viewerMessage() {
         TelegramResponse response = bot.getMessages(offset);
         if (response == null || response.result() == null) {
@@ -50,10 +46,39 @@ public class MessageController {
                         "Olá! Como posso ajudar?"
                 );
             }
-            if (mensagem.equalsIgnoreCase("dia")) {
+
+            for (String moeda : moedaString) {
+                if (mensagem.equalsIgnoreCase(moeda)) {
+                    DollarResponse price = bot.sendPrice();
+                    String men = """
+                            💵 Dólar → Real
+                            
+                            💰 Compra: R$ %s
+                            💰 Venda: R$ %s
+                            📈 Máxima: R$ %s
+                            📉 Mínima: R$ %s
+                            📊 Variação: %s%%
+                            """.formatted(
+                            price.usdBrl().bid(),
+                            price.usdBrl().ask(),
+                            price.usdBrl().high(),
+                            price.usdBrl().low(),
+                            price.usdBrl().pctChange());
+
+                    bot.sendMessage(
+                            update.message().chat().id(),
+                            men
+                    );
+                    offset = update.update_id() + 1;
+                    break;
+
+                }
+            }
+
+            if (mensagem.equalsIgnoreCase("dia") || mensagem.equalsIgnoreCase("tempo")) {
 
                 WeatherResponse weather = bot.sendWeather(
-                        update.message().chat().id()
+
                 );
                 String men = """
                         🌎 Cidade: %s
@@ -74,9 +99,10 @@ public class MessageController {
                         update.message().chat().id(),
                         men
                 );
+                offset = update.update_id() + 1;
             }
 
-            offset = update.update_id() + 1;
+
         }
     }
 }
