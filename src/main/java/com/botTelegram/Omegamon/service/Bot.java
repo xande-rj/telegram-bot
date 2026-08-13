@@ -22,7 +22,8 @@ public class Bot {
     private final String lon;
     private final String appid;
     private final String WEATHER_URL = "https://api.openweathermap.org/data/2.5";
-    private final String PRICE_URL = "https://economia.awesomeapi.com.br/last";
+
+    private final PriceService priceService;
 
     public Bot(
             RestClient.Builder builder,
@@ -30,8 +31,9 @@ public class Bot {
             @Value("${chat.id}") String chatId,
             @Value("${latitude}") String lat,
             @Value("${longitude}") String lon,
-            @Value("${appid}") String appid
+            @Value("${appid}") String appid, PriceService priceService
     ) {
+        this.priceService = priceService;
         this.restClient = builder
                 .baseUrl("https://api.telegram.org/bot" + token)
                 .build();
@@ -41,19 +43,10 @@ public class Bot {
         this.lon = lon;
         this.appid = appid;
     }
-public Map<String,CurrencyResponse> sendPrice(String moeda){
-    RestClient priceClient = RestClient.builder()
-            .baseUrl(PRICE_URL)
-            .build();
-    if (moeda.equals("BRL")) {
-        moeda = "USD";
-    }
-   return priceClient
-    .get()
-            .uri("/{moeda}-BRL",moeda)
-            .retrieve()
-           .body(new ParameterizedTypeReference<Map<String, CurrencyResponse>>() {});
 
+public CurrencyResponse getPrice(String moeda){
+    Map<String, CurrencyResponse> currencies = priceService.sendPrice(moeda);
+    return currencies.get(moeda + "BRL");
 }
 
     public void verify(String message) {

@@ -3,6 +3,7 @@ package com.botTelegram.Omegamon.controller;
 import com.botTelegram.Omegamon.Enum.Coins;
 import com.botTelegram.Omegamon.response.*;
 import com.botTelegram.Omegamon.service.Bot;
+import com.botTelegram.Omegamon.service.PriceService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -47,8 +48,7 @@ public class MessageController {
             for (String moeda : moedasString) {
                 if (mensagem.equalsIgnoreCase(moeda)) {
                     String coin = Coins.valueOf(moeda.toUpperCase()).getCoin();
-                    Map<String, CurrencyResponse> currencies = bot.sendPrice(coin);
-                    CurrencyResponse price = currencies.get(coin + "BRL");
+                    CurrencyResponse price = bot.getPrice(coin);
                     String men = """
                             💵 %s → Real
                             
