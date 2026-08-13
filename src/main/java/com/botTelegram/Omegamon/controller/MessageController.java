@@ -57,28 +57,9 @@ public class MessageController {
             }
 
             if (mensagem.equalsIgnoreCase("dia") || mensagem.equalsIgnoreCase("tempo")) {
-
-                WeatherResponse weather = bot.sendWeather(
-
-                );
-                String men = """
-                        🌎 Cidade: %s
-                        🌡️ Temperatura: %.1f°C
-                        🤔 Sensação: %.1f°C
-                        💧 Umidade: %d%%
-                        ☁️ Condição: %s
-                        💨 Vento: %.1f m/s
-                        """.formatted(
-                        weather.name(),
-                        weather.main().temp(),
-                        weather.main().feels_like(),
-                        weather.main().humidity(),
-                        weather.weather().get(0).description(),
-                        weather.wind().speed()
-                );
                 bot.sendMessage(
                         update.message().chat().id(),
-                        men
+                        bot.getWeather()
                 );
                 offset = update.update_id() + 1;
             }

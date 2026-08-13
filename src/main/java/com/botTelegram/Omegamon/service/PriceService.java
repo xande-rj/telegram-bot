@@ -1,6 +1,6 @@
 package com.botTelegram.Omegamon.service;
 
-import com.botTelegram.Omegamon.Enum.Coins;
+
 import com.botTelegram.Omegamon.response.CurrencyResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;

@@ -19,30 +19,33 @@ public class Bot {
 
     private final RestClient restClient;
     private final String chatId;
-    private final String lat;
-    private final String lon;
-    private final String appid;
+
     private final String WEATHER_URL = "https://api.openweathermap.org/data/2.5";
 
+
     private final PriceService priceService;
+    private final WeatherService weatherService;
 
     public Bot(
             RestClient.Builder builder,
             @Value("${telegram.token}") String token,
             @Value("${chat.id}") String chatId,
-            @Value("${latitude}") String lat,
-            @Value("${longitude}") String lon,
-            @Value("${appid}") String appid, PriceService priceService
+            PriceService priceService,
+            WeatherService weatherService
     ) {
         this.priceService = priceService;
+        this.weatherService = weatherService;
         this.restClient = builder
                 .baseUrl("https://api.telegram.org/bot" + token)
                 .build();
 
         this.chatId = chatId;
-        this.lat = lat;
-        this.lon = lon;
-        this.appid = appid;
+
+    }
+
+    public String getWeather() {
+
+return weatherService.getWeather();
     }
 
 public String getPrice(String moeda){
@@ -90,19 +93,5 @@ public String getPrice(String moeda){
                 .toBodilessEntity();
     }
 
-    public WeatherResponse sendWeather() {
-        RestClient weatherClient = RestClient.builder()
-                .baseUrl(WEATHER_URL)
-                .build();
-        return weatherClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/weather")
-                        .queryParam("lat", lat)
-                        .queryParam("lon", lon)
-                        .queryParam("appid", appid).build()
-                ).retrieve()
-                .body(WeatherResponse.class);
 
-
-    }
 }
