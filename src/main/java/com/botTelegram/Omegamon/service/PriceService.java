@@ -1,5 +1,6 @@
 package com.botTelegram.Omegamon.service;
 
+import com.botTelegram.Omegamon.Enum.Coins;
 import com.botTelegram.Omegamon.response.CurrencyResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,7 +18,7 @@ public class PriceService {
         this.restClient  = new ClientService(PRICE_URL);
     }
 
-    public Map<String, CurrencyResponse> sendPrice(String moeda){
+    private Map<String, CurrencyResponse> sendCoin(String moeda){
 
         if (moeda.equals("BRL")) {
             moeda = "USD";
@@ -28,5 +29,27 @@ public class PriceService {
                 .retrieve()
                 .body(new ParameterizedTypeReference<Map<String, CurrencyResponse>>() {});
 
+    }
+
+    public  String getPrice(String moeda){
+        Map<String, CurrencyResponse> currencies = sendCoin(moeda);
+        CurrencyResponse price = currencies.get(moeda + "BRL");
+
+        String mensagem = """
+                            💵 %s → Real
+                            
+                            💰 Compra: R$ %s
+                            💰 Venda: R$ %s
+                            📈 Máxima: R$ %s
+                            📉 Mínima: R$ %s
+                            📊 Variação: %s%%
+                            """.formatted(
+                moeda,
+                price.bid(),
+                price.ask(),
+                price.high(),
+                price.low(),
+                price.pctChange());
+        return mensagem;
     }
 }

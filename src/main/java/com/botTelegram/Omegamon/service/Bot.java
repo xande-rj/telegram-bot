@@ -1,5 +1,6 @@
 package com.botTelegram.Omegamon.service;
 
+import com.botTelegram.Omegamon.Enum.Coins;
 import com.botTelegram.Omegamon.response.CurrencyApiResponse;
 
 import com.botTelegram.Omegamon.response.CurrencyResponse;
@@ -44,9 +45,8 @@ public class Bot {
         this.appid = appid;
     }
 
-public CurrencyResponse getPrice(String moeda){
-    Map<String, CurrencyResponse> currencies = priceService.sendPrice(moeda);
-    return currencies.get(moeda + "BRL");
+public String getPrice(String moeda){
+    return priceService.getPrice(moeda);
 }
 
     public void verify(String message) {

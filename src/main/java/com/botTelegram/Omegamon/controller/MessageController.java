@@ -47,31 +47,12 @@ public class MessageController {
 
             for (String moeda : moedasString) {
                 if (mensagem.equalsIgnoreCase(moeda)) {
-                    String coin = Coins.valueOf(moeda.toUpperCase()).getCoin();
-                    CurrencyResponse price = bot.getPrice(coin);
-                    String men = """
-                            💵 %s → Real
-                            
-                            💰 Compra: R$ %s
-                            💰 Venda: R$ %s
-                            📈 Máxima: R$ %s
-                            📉 Mínima: R$ %s
-                            📊 Variação: %s%%
-                            """.formatted(
-                            Coins.valueOf(moeda.toUpperCase()),
-                            price.bid(),
-                            price.ask(),
-                            price.high(),
-                            price.low(),
-                            price.pctChange());
-
                     bot.sendMessage(
                             update.message().chat().id(),
-                            men
+                            bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
                     );
                     offset = update.update_id() + 1;
                     break;
-
                 }
             }
 
