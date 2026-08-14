@@ -33,10 +33,10 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
     public void consume(Update update) {
 
         if (update.hasMessage() && update.getMessage().hasText()) {
-            System.out.println("Mensagem : " + update.getMessage().getText());
 
-            String message_text = update.getMessage().getText();
 
+            String message_text = update.getMessage().getText().split("/")[1];
+            System.out.println("Mensagem : " + message_text);
             long chat_id = update.getMessage().getChatId();
 
             if (message_text.equalsIgnoreCase("oi")) {

@@ -1,5 +1,6 @@
 package com.botTelegram.TelegramBot.run;
 
+import com.botTelegram.TelegramBot.command.TelegramCommandRegistrar;
 import com.botTelegram.TelegramBot.controller.MessageController;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -13,20 +14,26 @@ public class TelegramBotRunner implements CommandLineRunner {
     private String token;
     private final MessageController messageController;
     private final TelegramClient telegramClient;
+    private final TelegramCommandRegistrar command;
 
-    public TelegramBotRunner(@Value("${telegram.token}") String token,
-                             MessageController messageController,
-                             TelegramClient telegramClient
+    public TelegramBotRunner(
+            @Value("${telegram.token}") String token,
+            MessageController messageController,
+            TelegramClient telegramClient,
+            TelegramCommandRegistrar telegramCommandRegistrar
+
     ) {
         this.token = token;
         this.messageController = messageController;
         this.telegramClient = telegramClient;
+        this.command = telegramCommandRegistrar;
     }
 
     @Override
     public void run(String... args) throws Exception {
         try (TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication()) {
             botsApplication.registerBot(token, messageController);
+            command.registerCommands(telegramClient);
 
             System.out.println("rodando Bot...");
             Thread.currentThread().join();
