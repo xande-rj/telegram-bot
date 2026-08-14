@@ -1,7 +1,7 @@
-package com.botTelegram.Omegamon.service;
+package com.botTelegram.TelegramBot.service;
 
 
-import com.botTelegram.Omegamon.response.CurrencyResponse;
+import com.botTelegram.TelegramBot.response.CurrencyResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;

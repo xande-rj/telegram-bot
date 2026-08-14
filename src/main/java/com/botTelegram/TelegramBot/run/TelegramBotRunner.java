@@ -1,0 +1,30 @@
+package com.botTelegram.TelegramBot.run;
+
+import com.botTelegram.TelegramBot.controller.MessageController;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
+
+@Component
+public class TelegramBotRunner implements CommandLineRunner {
+    @Value("${telegram.token}")
+    private String token;
+    private final MessageController messageController;
+
+    public TelegramBotRunner(@Value("${telegram.token}") String token, MessageController messageController) {
+        this.token = token;
+        this.messageController = messageController;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        try (TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication()) {
+            botsApplication.registerBot(token, messageController);
+            System.out.println("rodando Bot...");
+            Thread.currentThread().join();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

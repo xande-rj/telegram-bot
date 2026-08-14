@@ -1,4 +1,4 @@
-package com.botTelegram.Omegamon.response;
+package com.botTelegram.TelegramBot.response;
 
 import java.util.List;
 

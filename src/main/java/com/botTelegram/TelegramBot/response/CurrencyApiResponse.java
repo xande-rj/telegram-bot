@@ -1,6 +1,4 @@
-package com.botTelegram.Omegamon.response;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
+package com.botTelegram.TelegramBot.response;
 
 import java.util.Map;
 

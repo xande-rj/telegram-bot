@@ -1,4 +1,4 @@
-package com.botTelegram.Omegamon.Enum;
+package com.botTelegram.TelegramBot.Enum;
 
 public enum Coins {
     IENE("JPY"),

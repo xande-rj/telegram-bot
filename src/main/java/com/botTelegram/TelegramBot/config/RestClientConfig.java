@@ -1,4 +1,4 @@
-package com.botTelegram.Omegamon.config;
+package com.botTelegram.TelegramBot.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

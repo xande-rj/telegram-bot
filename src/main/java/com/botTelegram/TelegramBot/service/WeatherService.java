@@ -1,9 +1,8 @@
-package com.botTelegram.Omegamon.service;
+package com.botTelegram.TelegramBot.service;
 
-import com.botTelegram.Omegamon.response.WeatherResponse;
+import com.botTelegram.TelegramBot.response.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 @Service
 public class WeatherService {

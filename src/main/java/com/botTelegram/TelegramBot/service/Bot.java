@@ -1,26 +1,15 @@
-package com.botTelegram.Omegamon.service;
+package com.botTelegram.TelegramBot.service;
 
-import com.botTelegram.Omegamon.Enum.Coins;
-import com.botTelegram.Omegamon.response.CurrencyApiResponse;
+import com.botTelegram.TelegramBot.response.TelegramResponse;
 
-import com.botTelegram.Omegamon.response.CurrencyResponse;
-import com.botTelegram.Omegamon.response.TelegramResponse;
-
-import com.botTelegram.Omegamon.response.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-
-import java.util.Map;
 
 @Service
 public class Bot {
 
     private final RestClient restClient;
-    private final String chatId;
-
-    private final String WEATHER_URL = "https://api.openweathermap.org/data/2.5";
 
 
     private final PriceService priceService;
@@ -29,7 +18,6 @@ public class Bot {
     public Bot(
             RestClient.Builder builder,
             @Value("${telegram.token}") String token,
-            @Value("${chat.id}") String chatId,
             PriceService priceService,
             WeatherService weatherService
     ) {
@@ -39,31 +27,19 @@ public class Bot {
                 .baseUrl("https://api.telegram.org/bot" + token)
                 .build();
 
-        this.chatId = chatId;
+
 
     }
 
     public String getWeather() {
 
-return weatherService.getWeather();
+        return weatherService.getWeather();
     }
 
-public String getPrice(String moeda){
-    return priceService.getPrice(moeda);
-}
-
-    public void verify(String message) {
-
-        restClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/sendMessage")
-                        .queryParam("chat_id", chatId)
-                        .queryParam("text", message)
-                        .build())
-                .retrieve()
-                .toBodilessEntity();
+    public String getPrice(String moeda) {
+        return priceService.getPrice(moeda);
     }
+
 
     public TelegramResponse getMessages(Long offset) {
         return restClient

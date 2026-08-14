@@ -1,4 +1,4 @@
-package com.botTelegram.Omegamon.service;
+package com.botTelegram.TelegramBot.service;
 
 
 import org.springframework.web.client.RestClient;
