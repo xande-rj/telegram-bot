@@ -5,13 +5,12 @@ import com.botTelegram.TelegramBot.response.TelegramResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 @Service
 public class Bot {
 
     private final RestClient restClient;
-
-
     private final PriceService priceService;
     private final WeatherService weatherService;
 
@@ -26,13 +25,9 @@ public class Bot {
         this.restClient = builder
                 .baseUrl("https://api.telegram.org/bot" + token)
                 .build();
-
-
-
     }
 
     public String getWeather() {
-
         return weatherService.getWeather();
     }
 
@@ -41,32 +36,13 @@ public class Bot {
     }
 
 
-    public TelegramResponse getMessages(Long offset) {
-        return restClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/getUpdates")
-                        .queryParam("offset", offset)
-                        .queryParam("timeout", 10).build())
+    public SendMessage sendMessage(Long chatId, String message) {
+        return   SendMessage // Create a message object
+                .builder()
+                .chatId(chatId)
+                .text(message)
+                .build();
 
-                .retrieve()
-                .body(TelegramResponse.class);
-
-
-    }
-
-
-    public void sendMessage(Long chatId, String message) {
-
-        restClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/sendMessage")
-                        .queryParam("chat_id", chatId)
-                        .queryParam("text", message)
-                        .build())
-                .retrieve()
-                .toBodilessEntity();
     }
 
 

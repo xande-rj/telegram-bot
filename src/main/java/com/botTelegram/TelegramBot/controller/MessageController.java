@@ -39,27 +39,25 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
             System.out.println("Mensagem : " + update.getMessage().getText());
 
             String message_text = update.getMessage().getText();
+
             long chat_id = update.getMessage().getChatId();
 
             if (message_text.equalsIgnoreCase("oi")) {
-
-                bot.sendMessage(
-                        chat_id,
-                        "Olá! Como posso ajudar?"
-                );
-
+                helloWorld(chat_id);
             }
 
-            SendMessage message = SendMessage // Create a message object
-                    .builder()
-                    .chatId(chat_id)
-                    .text(message_text)
-                    .build();
-            try {
-                telegramClient.execute(message); // Sending our message object to user
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
+        }
+    }
+
+    private void helloWorld(long chat_id) {
+        SendMessage message = bot.sendMessage(
+                chat_id,
+                "Olá! Como posso ajudar?"
+        );
+        try {
+            telegramClient.execute(message); // Sending our message object to user
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 }
