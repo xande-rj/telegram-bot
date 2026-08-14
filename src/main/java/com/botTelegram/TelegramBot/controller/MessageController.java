@@ -1,13 +1,11 @@
 package com.botTelegram.TelegramBot.controller;
 
-import com.botTelegram.TelegramBot.service.Bot;
+import com.botTelegram.TelegramBot.service.BotService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
@@ -20,17 +18,16 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Component
 public class MessageController implements LongPollingSingleThreadUpdateConsumer {
-    private TelegramClient telegramClient;
+    private final TelegramClient telegramClient;
 
-    public MessageController(@Value("${telegram.token}") String token) {
-        this.telegramClient = new OkHttpTelegramClient(token);
+    public MessageController(TelegramClient telegramClient) {
+        this.telegramClient = telegramClient;
     }
 
 
-    private final String[] moedasString = new String[]{"dolar", "real", "euro", "iene", "yuan"};
 
     @Autowired
-    private Bot bot;
+    private BotService bot;
 
     @Override
     public void consume(Update update) {
@@ -46,20 +43,39 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
                 helloWorld(chat_id);
             }
 
+
         }
     }
 
     private void helloWorld(long chat_id) {
-        SendMessage message = bot.sendMessage(
-                chat_id,
-                "Olá! Como posso ajudar?"
-        );
         try {
+            SendMessage message = bot.sendMessage(
+                    chat_id,
+                    "Olá! Como posso ajudar?"
+            );
             telegramClient.execute(message); // Sending our message object to user
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
+
+//    private void coins(){
+//        for (String moeda : moedasString) {
+//                try {
+//                    if (mensagem.equalsIgnoreCase(moeda)) {
+//                        bot.sendMessage(
+//                                update.message().chat().id(),
+//                                bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
+//                        );
+//                        offset = update.update_id() + 1;
+//                        break;
+//                    }
+//                }catch (IllegalArgumentException e) {
+//                    System.out.println(e.getMessage());
+//                }
+//
+//            }
+//    }
 }
 //    @Scheduled(fixedRate = 5000)
 //    public void viewerMessage() {
