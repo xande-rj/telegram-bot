@@ -12,7 +12,7 @@ import java.util.Map;
 public class PriceService {
     private final String PRICE_URL;
     private final ClientService restClient;
-    private final String[] MOEDAS_STRING = new String[]{"dolar", "euro", "iene", "yuan"};
+
 
     public PriceService(@Value("${price_url}")String priceUrl) {
         PRICE_URL = priceUrl;
