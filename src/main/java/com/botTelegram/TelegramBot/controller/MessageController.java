@@ -39,11 +39,12 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
             System.out.println("Mensagem : " + message_text);
             long chat_id = update.getMessage().getChatId();
 
-            if (message_text.equalsIgnoreCase("oi")) {
+            if (message_text.equalsIgnoreCase("ola")) {
                 helloWorld(chat_id);
             }
-
-
+            if (message_text.equalsIgnoreCase("Tempo")) {
+                weather(chat_id);
+            }
         }
     }
 
@@ -52,6 +53,19 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
             SendMessage message = bot.sendMessage(
                     chat_id,
                     "Olá! Como posso ajudar?"
+            );
+            telegramClient.execute(message); // Sending our message object to user
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void weather(long chat_id) {
+
+        try {
+            SendMessage message = bot.sendMessage(
+                    chat_id,
+                    bot.getWeather()
             );
             telegramClient.execute(message); // Sending our message object to user
         } catch (TelegramApiException e) {
@@ -98,13 +112,7 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
 //
 //            }
 //
-//            if (mensagem.equalsIgnoreCase("dia") || mensagem.equalsIgnoreCase("tempo")) {
-//                bot.sendMessage(
-//                        update.message().chat().id(),
-//                        bot.getWeather()
-//                );
-//                offset = update.update_id() + 1;
-//            }
+//
 //
 //
 //        }
