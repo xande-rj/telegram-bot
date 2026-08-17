@@ -1,4 +1,4 @@
-package com.botTelegram.TelegramBot.response;
+package com.botTelegram.TelegramBot.response.CurrencyResponse;
 
 import java.util.Map;
 

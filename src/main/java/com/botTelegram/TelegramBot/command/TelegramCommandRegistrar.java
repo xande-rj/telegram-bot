@@ -14,12 +14,14 @@ import java.util.List;
 public class TelegramCommandRegistrar {
     public void registerCommands(TelegramClient telegramClient) throws TelegramApiException {
         List<BotCommand> botCommands = List.of(
-                new BotCommand("ola","mande um oi ao bot"),
+                new BotCommand("ola","Mande um oi ao bot."),
                 new BotCommand("tempo","Veja como esta o tempo agora."),
-                new BotCommand("dolar","Cotacao do dolar a partir do real"),
-                new BotCommand("euro","Cotacao do euro a partir do real"),
-                new BotCommand("iene","Cotacao do iene a partir do real"),
-                new BotCommand("yuan","Cotacao do yuan a partir do real")
+                new BotCommand("dolar","Cotacao do dolar a partir do real."),
+                new BotCommand("euro","Cotacao do euro a partir do real."),
+                new BotCommand("iene","Cotacao do iene a partir do real."),
+                new BotCommand("yuan","Cotacao do yuan a partir do real."),
+                new BotCommand("noticias","Atualizar as noticias.")
+
         );
         telegramClient.execute(new SetMyCommands(botCommands,new BotCommandScopeDefault(),null));
     }

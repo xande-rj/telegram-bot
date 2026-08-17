@@ -1,6 +1,6 @@
 package com.botTelegram.TelegramBot.service;
 
-import com.botTelegram.TelegramBot.response.WeatherResponse;
+import com.botTelegram.TelegramBot.response.WeatherResponse.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +15,7 @@ public class WeatherService {
     public WeatherService(@Value("${weather_url}")String weather_url,
                           @Value("${latitude}") String lat,
                           @Value("${longitude}") String lon,
-                                      @Value("${appid}") String appid
+                          @Value("${weather.token}") String appid
 
                           )
     {
@@ -36,6 +36,7 @@ public class WeatherService {
                 ).retrieve()
                 .body(WeatherResponse.class);
     }
+
     public String getWeather() {
         WeatherResponse  weather = sendWeather();
         String mensagem = """

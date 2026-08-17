@@ -51,9 +51,23 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
                     coins(chat_id,moeda);
                 }
             }
+            if (message_text.equalsIgnoreCase("noticias")) {
+                news(chat_id);
+            }
         }
     }
+    private void news(long chat_id) {
 
+        try {
+            SendMessage message = bot.sendMessage(
+                    chat_id,
+                    bot.getNews()
+            );
+            telegramClient.execute(message); // Sending our message object to user
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
     private void helloWorld(long chat_id) {
         try {
             SendMessage message = bot.sendMessage(

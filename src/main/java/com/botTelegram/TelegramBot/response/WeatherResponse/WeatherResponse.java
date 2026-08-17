@@ -1,4 +1,6 @@
-package com.botTelegram.TelegramBot.response;
+package com.botTelegram.TelegramBot.response.WeatherResponse;
+
+import com.botTelegram.TelegramBot.response.CurrencyResponse.Coord;
 
 import java.util.List;
 

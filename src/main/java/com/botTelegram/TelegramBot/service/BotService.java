@@ -1,28 +1,25 @@
 package com.botTelegram.TelegramBot.service;
 
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 @Service
 public class BotService {
 
-    private final RestClient restClient;
+
     private final PriceService priceService;
     private final WeatherService weatherService;
+    private final NewsService newsService;
 
     public BotService(
-            RestClient.Builder builder,
-            @Value("${telegram.token}") String token,
             PriceService priceService,
-            WeatherService weatherService
+            WeatherService weatherService,
+            NewsService newsService
     ) {
         this.priceService = priceService;
         this.weatherService = weatherService;
-        this.restClient = builder
-                .baseUrl("https://api.telegram.org/bot" + token)
-                .build();
+        this.newsService = newsService;
     }
 
     public String getWeather() {
@@ -44,4 +41,7 @@ public class BotService {
     }
 
 
+    public String getNews() {
+         return newsService.getNews();
+    }
 }

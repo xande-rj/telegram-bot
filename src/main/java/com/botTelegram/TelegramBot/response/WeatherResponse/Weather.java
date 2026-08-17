@@ -1,4 +1,4 @@
-package com.botTelegram.TelegramBot.response;
+package com.botTelegram.TelegramBot.response.WeatherResponse;
 
 public record Weather(
         Integer id,
