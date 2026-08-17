@@ -3,12 +3,14 @@ package com.botTelegram.TelegramBot.controller;
 import com.botTelegram.TelegramBot.Enum.Coins;
 import com.botTelegram.TelegramBot.service.BotService;
 
+import com.botTelegram.TelegramBot.service.RateLimiteService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
+import org.telegram.telegrambots.longpolling.util.DefaultLongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -18,12 +20,15 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 
 @Component
-public class MessageController implements LongPollingSingleThreadUpdateConsumer {
+public class MessageController extends DefaultLongPollingUpdateConsumer {
     private final TelegramClient telegramClient;
     private final String[] MOEDAS_STRING = new String[]{"dolar", "euro", "iene", "yuan"};
+    private final RateLimiteService rateLimiteService;
 
-    public MessageController(TelegramClient telegramClient) {
+    public MessageController(TelegramClient telegramClient, RateLimiteService rateLimiteService) {
         this.telegramClient = telegramClient;
+        this.rateLimiteService = rateLimiteService;
+
     }
 
 
@@ -35,11 +40,16 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
 
         if (update.hasMessage() && update.getMessage().hasText()) {
 
-
+if(update.getMessage().getText().length()<=2){
+    return;
+}
             String message_text = update.getMessage().getText().split("/")[1];
             System.out.println("Mensagem : " + message_text);
             long chat_id = update.getMessage().getChatId();
-
+if(!rateLimiteService.permitir(chat_id)){
+    avisarLimite(chat_id);
+    return;
+}
             if (message_text.equalsIgnoreCase("ola")) {
                 helloWorld(chat_id);
             }
@@ -54,6 +64,16 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
             if (message_text.equalsIgnoreCase("noticias")) {
                 news(chat_id);
             }
+        }
+    }
+    public void avisarLimite(long chat_id) {
+        String mensagem =
+                "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
+        try {
+           SendMessage message = bot.sendMessage(chat_id, mensagem);
+           telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
     private void news(long chat_id) {
