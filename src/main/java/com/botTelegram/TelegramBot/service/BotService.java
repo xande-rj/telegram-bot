@@ -30,7 +30,13 @@ public class BotService {
         return priceService.getPrice(moeda);
     }
 
+    public String getNews() {
+        return newsService.getNews();
+    }
 
+    public void getNote(){
+
+    }
     public SendMessage sendMessage(Long chatId, String message) {
         return SendMessage // Create a message object
                 .builder()
@@ -41,7 +47,5 @@ public class BotService {
     }
 
 
-    public String getNews() {
-         return newsService.getNews();
-    }
+
 }

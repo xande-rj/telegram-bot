@@ -20,7 +20,9 @@ public class TelegramCommandRegistrar {
                 new BotCommand("euro","Cotacao do euro a partir do real."),
                 new BotCommand("iene","Cotacao do iene a partir do real."),
                 new BotCommand("yuan","Cotacao do yuan a partir do real."),
-                new BotCommand("noticias","Atualizar as noticias.")
+                new BotCommand("noticias","Atualizar as noticias."),
+                new BotCommand("notas","Veja as opcoes de notas.")
+
 
         );
         telegramClient.execute(new SetMyCommands(botCommands,new BotCommandScopeDefault(),null));

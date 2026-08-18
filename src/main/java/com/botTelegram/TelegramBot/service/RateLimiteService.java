@@ -16,12 +16,12 @@ public class RateLimiteService {
     private static final int LIMIT_REQUESTS = 10;
     private static final Duration JANELA = Duration.ofMinutes(10);
 
-    public boolean permitir (Long chat_id){
+    public boolean permitir(Long chat_id) {
         Instant now = Instant.now();
-        Deque<Instant> timestamps = historico.computeIfAbsent(chat_id, id-> new ArrayDeque<>());
-        synchronized (timestamps){
-            limpar(timestamps,now);
-            if(timestamps.size() >= LIMIT_REQUESTS){
+        Deque<Instant> timestamps = historico.computeIfAbsent(chat_id, id -> new ArrayDeque<>());
+        synchronized (timestamps) {
+            limpar(timestamps, now);
+            if (timestamps.size() >= LIMIT_REQUESTS) {
                 return false;
             }
             timestamps.addLast(now);
@@ -29,9 +29,10 @@ public class RateLimiteService {
         }
 
     }
-    public void limpar(Deque<Instant> timestamps, Instant now){
+
+    public void limpar(Deque<Instant> timestamps, Instant now) {
         Instant limite = now.minus(JANELA);
-        while(!timestamps.isEmpty() && timestamps.peekFirst().isBefore(limite)){
+        while (!timestamps.isEmpty() && timestamps.peekFirst().isBefore(limite)) {
             timestamps.pollFirst();
         }
     }

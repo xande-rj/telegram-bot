@@ -6,17 +6,22 @@ import com.botTelegram.TelegramBot.service.BotService;
 import com.botTelegram.TelegramBot.service.RateLimiteService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.DefaultLongPollingUpdateConsumer;
-import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Component
@@ -37,19 +42,25 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
     @Override
     public void consume(Update update) {
-
+        if (update.hasCallbackQuery()) {
+            onUpdateReceived(update.getCallbackQuery());
+            return;
+        }
         if (update.hasMessage() && update.getMessage().hasText()) {
 
-if(update.getMessage().getText().length()<=2){
-    return;
-}
+            if (update.getMessage().getText().length() <= 2) {
+                return;
+            }
             String message_text = update.getMessage().getText().split("/")[1];
             System.out.println("Mensagem : " + message_text);
             long chat_id = update.getMessage().getChatId();
-if(!rateLimiteService.permitir(chat_id)){
-    avisarLimite(chat_id);
-    return;
-}
+            if (!rateLimiteService.permitir(chat_id)) {
+                avisarLimite(chat_id);
+                return;
+            }
+            if (message_text.equalsIgnoreCase("notas")) {
+                notes(chat_id);
+            }
             if (message_text.equalsIgnoreCase("ola")) {
                 helloWorld(chat_id);
             }
@@ -58,7 +69,7 @@ if(!rateLimiteService.permitir(chat_id)){
             }
             for (String moeda : MOEDAS_STRING) {
                 if (message_text.equalsIgnoreCase(moeda)) {
-                    coins(chat_id,moeda);
+                    coins(chat_id, moeda);
                 }
             }
             if (message_text.equalsIgnoreCase("noticias")) {
@@ -66,16 +77,61 @@ if(!rateLimiteService.permitir(chat_id)){
             }
         }
     }
-    public void avisarLimite(long chat_id) {
-        String mensagem =
-                "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
+
+    public void onUpdateReceived(CallbackQuery update) {
+        System.out.println("Mensagem de Call Back : " + update.getData());
+    }
+
+    public void notes(long chat_id) {
         try {
-           SendMessage message = bot.sendMessage(chat_id, mensagem);
-           telegramClient.execute(message);
+
+            InlineKeyboardButton button = InlineKeyboardButton.builder()
+                    .text("oi")
+                    .callbackData("a")
+                    .build();
+            InlineKeyboardButton button1 = InlineKeyboardButton.builder()
+                    .text("oi1")
+                    .callbackData("b")
+                    .build();
+            InlineKeyboardButton button2 = InlineKeyboardButton.builder()
+                    .text("oi2")
+                    .callbackData("c")
+                    .build();
+
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(button);
+            row.add(button1);
+
+            InlineKeyboardRow row1 = new InlineKeyboardRow();
+            row1.add(button2);
+            InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
+                    .keyboardRow(row)
+                    .keyboardRow(row1)
+                    .build();
+
+            telegramClient.execute(SendMessage.builder()
+                    .chatId(chat_id)
+                    .text("menes")
+                    .replyMarkup(markup)
+                    .build()
+            );
+
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
+
+    public void avisarLimite(long chat_id) {
+        String mensagem =
+                "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
+        try {
+            SendMessage message = bot.sendMessage(chat_id, mensagem);
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void news(long chat_id) {
 
         try {
@@ -88,6 +144,7 @@ if(!rateLimiteService.permitir(chat_id)){
             e.printStackTrace();
         }
     }
+
     private void helloWorld(long chat_id) {
         try {
             SendMessage message = bot.sendMessage(
@@ -112,20 +169,20 @@ if(!rateLimiteService.permitir(chat_id)){
         }
     }
 
-    private void coins(long chat_id,String moeda) {
-                try {
-                    SendMessage message = bot.sendMessage(
-                                chat_id,
-                                bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
-                        );
-                    telegramClient.execute(message); // Sending our message object to user
+    private void coins(long chat_id, String moeda) {
+        try {
+            SendMessage message = bot.sendMessage(
+                    chat_id,
+                    bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
+            );
+            telegramClient.execute(message); // Sending our message object to user
 
-                }catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
 
-            }
     }
+}
 
 
 
