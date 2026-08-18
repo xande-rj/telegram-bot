@@ -4,6 +4,9 @@ import com.botTelegram.TelegramBot.entity.Note;
 import com.botTelegram.TelegramBot.repository.NoteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.util.List;
 
@@ -12,6 +15,32 @@ public class NoteService {
     @Autowired
     private NoteRepository noteRepository;
 
+    public InlineKeyboardMarkup getNotes() {
+        InlineKeyboardButton save = InlineKeyboardButton.builder()
+                .text("Salvar Notas \uD83D\uDDC2\uFE0F")
+                .callbackData("save")
+                .build();
+        InlineKeyboardButton get = InlineKeyboardButton.builder()
+                .text("Listar Notas \uD83D\uDDD2\uFE0F")
+                .callbackData("get")
+                .build();
+        InlineKeyboardButton delete = InlineKeyboardButton.builder()
+                .text("Deletar Notas \uD83D\uDDD1\uFE0F ")
+                .callbackData("delete")
+                .build();
+
+        InlineKeyboardRow row = new InlineKeyboardRow();
+        row.add(save);
+        row.add(get);
+
+        InlineKeyboardRow row1 = new InlineKeyboardRow();
+        row1.add(delete);
+        InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
+                .keyboardRow(row)
+                .keyboardRow(row1)
+                .build();
+        return markup;
+    }
     public Note save(Note note) {
         return noteRepository.save(note);
     }

@@ -84,38 +84,9 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
     public void notes(long chat_id) {
         try {
-
-            InlineKeyboardButton button = InlineKeyboardButton.builder()
-                    .text("oi")
-                    .callbackData("a")
-                    .build();
-            InlineKeyboardButton button1 = InlineKeyboardButton.builder()
-                    .text("oi1")
-                    .callbackData("b")
-                    .build();
-            InlineKeyboardButton button2 = InlineKeyboardButton.builder()
-                    .text("oi2")
-                    .callbackData("c")
-                    .build();
-
-            InlineKeyboardRow row = new InlineKeyboardRow();
-            row.add(button);
-            row.add(button1);
-
-            InlineKeyboardRow row1 = new InlineKeyboardRow();
-            row1.add(button2);
-            InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
-                    .keyboardRow(row)
-                    .keyboardRow(row1)
-                    .build();
-
-            telegramClient.execute(SendMessage.builder()
-                    .chatId(chat_id)
-                    .text("menes")
-                    .replyMarkup(markup)
-                    .build()
-            );
-
+            InlineKeyboardMarkup markup = bot.getNoteMarkup();
+            SendMessage message = bot.sendMarkup(chat_id, "Notas: ",markup);
+            telegramClient.execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
