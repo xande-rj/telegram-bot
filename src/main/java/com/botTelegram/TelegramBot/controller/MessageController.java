@@ -59,18 +59,9 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
             if (estado.isPresent() && estado.get().equals("AGUARDANDO_TEXTO_NOTA")) {
                 String text = update.getMessage().getText();
-
                 bot.saveNote(text, chat_id);
                 conversationStateService.limparEstado(chat_id);
-                try {
-                    telegramClient.execute(SendMessage.builder()
-                            .chatId(chat_id)
-                            .text("✅ Nota salva!")
-                            .build());
-                    return;
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
+                execute(chat_id,"✅ Nota salva!");
             }
             if (update.getMessage().getText().contains("/")) {
                 String message_text = update.getMessage().getText().split("/")[1];
@@ -106,48 +97,10 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
         if (callBack.equalsIgnoreCase("save")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_TEXTO_NOTA");
-            try {
+            execute(chatId,"📝 Digite o texto da sua nota:");
 
-                telegramClient.execute(SendMessage.builder()
-                        .chatId(chatId)
-                        .text("📝 Digite o texto da sua nota:")
-                        .build()
-                );
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
         } else if (callBack.equalsIgnoreCase("get")) {
-
-            List<Note> notes = bot.getNotes(chatId);
-            StringBuilder mensagem = new StringBuilder("""
-                    📰 *Notas*
-                    
-                    """);
-            for (int i = 0; i < notes.size(); i++) {
-
-                Note note = notes.get(i);
-
-                mensagem.append("""
-                        - *%d*
-                        
-                        📰 texto: %s
-
-                        """.formatted(
-                        i + 1,
-                        note.getText()
-                ));
-            }
-            try {
-
-                telegramClient.execute(SendMessage.builder()
-                        .chatId(chatId)
-                        .text("📝")
-                                .text(mensagem.toString())
-                        .build()
-                );
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
+            execute(chatId,bot.getNotes(chatId));
 
         } else if (callBack.equalsIgnoreCase("delete")) {
 
@@ -167,68 +120,49 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
     public void avisarLimite(long chat_id) {
         String mensagem =
                 "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
+        execute(chat_id, mensagem);
+
+    }
+
+    private void news(long chat_id) {
+        execute(
+                chat_id,
+                bot.getNews()
+        );
+    }
+
+    private void helloWorld(long chat_id) {
+        execute(
+                chat_id,
+                "Olá! Como posso ajudar?"
+        );
+    }
+
+    private void weather(long chat_id) {
+        execute(
+                chat_id,
+                bot.getWeather()
+        );
+    }
+
+    private void coins(long chat_id, String moeda) {
+        execute(
+                chat_id,
+                bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
+        );
+    }
+
+    private void execute(Long chat_id, String text) {
         try {
-            SendMessage message = bot.sendMessage(chat_id, mensagem);
+            SendMessage message = bot.sendMessage(
+                    chat_id,
+                    text
+            );
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
-
-    private void news(long chat_id) {
-
-        try {
-            SendMessage message = bot.sendMessage(
-                    chat_id,
-                    bot.getNews()
-            );
-            telegramClient.execute(message); // Sending our message object to user
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void helloWorld(long chat_id) {
-        try {
-            SendMessage message = bot.sendMessage(
-                    chat_id,
-                    "Olá! Como posso ajudar?"
-            );
-            telegramClient.execute(message); // Sending our message object to user
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void weather(long chat_id) {
-        try {
-            SendMessage message = bot.sendMessage(
-                    chat_id,
-                    bot.getWeather()
-            );
-            telegramClient.execute(message); // Sending our message object to user
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void coins(long chat_id, String moeda) {
-        try {
-            SendMessage message = bot.sendMessage(
-                    chat_id,
-                    bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
-            );
-            telegramClient.execute(message); // Sending our message object to user
-
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-
-    }
 }
-
-
-
-
 
 
