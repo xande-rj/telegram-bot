@@ -53,9 +53,6 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
         }
         if (update.hasMessage() && update.getMessage().hasText()) {
 
-            if (update.getMessage().getText().length() <= 2) {
-                return;
-            }
 
             long chat_id = update.getMessage().getChatId();
             Optional<String> estado = conversationStateService.getEstado(chat_id);
@@ -74,39 +71,39 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
-                // não processa como comando normal
             }
-            String message_text = update.getMessage().getText().split("/")[1];
-            System.out.println("Mensagem : " + message_text);
+            if (update.getMessage().getText().contains("/")) {
+                String message_text = update.getMessage().getText().split("/")[1];
 
-            if (!rateLimiteService.permitir(chat_id)) {
-                avisarLimite(chat_id);
-                return;
-            }
-            if (message_text.equalsIgnoreCase("notas")) {
-                notes(chat_id);
-            }
-            if (message_text.equalsIgnoreCase("ola")) {
-                helloWorld(chat_id);
-            }
-            if (message_text.equalsIgnoreCase("Tempo")) {
-                weather(chat_id);
-            }
-            for (String moeda : MOEDAS_STRING) {
-                if (message_text.equalsIgnoreCase(moeda)) {
-                    coins(chat_id, moeda);
+                if (!rateLimiteService.permitir(chat_id)) {
+                    avisarLimite(chat_id);
+                    return;
                 }
-            }
-            if (message_text.equalsIgnoreCase("noticias")) {
-                news(chat_id);
+                if (message_text.equalsIgnoreCase("notas")) {
+                    notes(chat_id);
+                }
+                if (message_text.equalsIgnoreCase("ola")) {
+                    helloWorld(chat_id);
+                }
+                if (message_text.equalsIgnoreCase("Tempo")) {
+                    weather(chat_id);
+                }
+                for (String moeda : MOEDAS_STRING) {
+                    if (message_text.equalsIgnoreCase(moeda)) {
+                        coins(chat_id, moeda);
+                    }
+                }
+                if (message_text.equalsIgnoreCase("noticias")) {
+                    news(chat_id);
+                }
             }
         }
     }
 
     public void onUpdateReceived(CallbackQuery update) {
-        System.out.println("Mensagem de Call Back : " + update.getData());
         String callBack = update.getData();
         Long chatId = update.getMessage().getChatId();
+
         if (callBack.equalsIgnoreCase("save")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_TEXTO_NOTA");
             try {
@@ -134,14 +131,12 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                         - *%d*
                         
                         📰 texto: %s
-                        
-                        
+
                         """.formatted(
                         i + 1,
                         note.getText()
                 ));
             }
-            System.out.println("Mensagem de Call Back : " + notes);
             try {
 
                 telegramClient.execute(SendMessage.builder()
