@@ -1,8 +1,11 @@
 package com.botTelegram.TelegramBot.controller;
 
 import com.botTelegram.TelegramBot.Enum.Coins;
+import com.botTelegram.TelegramBot.entity.Note;
+import com.botTelegram.TelegramBot.response.NewsResponse.ArticleResponse;
 import com.botTelegram.TelegramBot.service.BotService;
 
+import com.botTelegram.TelegramBot.service.ConversationStateService;
 import com.botTelegram.TelegramBot.service.RateLimiteService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,6 +25,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Component
@@ -36,7 +40,8 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
     }
 
-
+    @Autowired
+    private ConversationStateService conversationStateService;
     @Autowired
     private BotService bot;
 
@@ -51,9 +56,29 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
             if (update.getMessage().getText().length() <= 2) {
                 return;
             }
+
+            long chat_id = update.getMessage().getChatId();
+            Optional<String> estado = conversationStateService.getEstado(chat_id);
+
+            if (estado.isPresent() && estado.get().equals("AGUARDANDO_TEXTO_NOTA")) {
+                String text = update.getMessage().getText();
+
+                bot.saveNote(text, chat_id);
+                conversationStateService.limparEstado(chat_id);
+                try {
+                    telegramClient.execute(SendMessage.builder()
+                            .chatId(chat_id)
+                            .text("✅ Nota salva!")
+                            .build());
+                    return;
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+                // não processa como comando normal
+            }
             String message_text = update.getMessage().getText().split("/")[1];
             System.out.println("Mensagem : " + message_text);
-            long chat_id = update.getMessage().getChatId();
+
             if (!rateLimiteService.permitir(chat_id)) {
                 avisarLimite(chat_id);
                 return;
@@ -80,12 +105,64 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
     public void onUpdateReceived(CallbackQuery update) {
         System.out.println("Mensagem de Call Back : " + update.getData());
+        String callBack = update.getData();
+        Long chatId = update.getMessage().getChatId();
+        if (callBack.equalsIgnoreCase("save")) {
+            conversationStateService.definirEstado(chatId, "AGUARDANDO_TEXTO_NOTA");
+            try {
+
+                telegramClient.execute(SendMessage.builder()
+                        .chatId(chatId)
+                        .text("📝 Digite o texto da sua nota:")
+                        .build()
+                );
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        } else if (callBack.equalsIgnoreCase("get")) {
+
+            List<Note> notes = bot.getNotes(chatId);
+            StringBuilder mensagem = new StringBuilder("""
+                    📰 *Notas*
+                    
+                    """);
+            for (int i = 0; i < notes.size(); i++) {
+
+                Note note = notes.get(i);
+
+                mensagem.append("""
+                        - *%d*
+                        
+                        📰 texto: %s
+                        
+                        
+                        """.formatted(
+                        i + 1,
+                        note.getText()
+                ));
+            }
+            System.out.println("Mensagem de Call Back : " + notes);
+            try {
+
+                telegramClient.execute(SendMessage.builder()
+                        .chatId(chatId)
+                        .text("📝")
+                                .text(mensagem.toString())
+                        .build()
+                );
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+
+        } else if (callBack.equalsIgnoreCase("delete")) {
+
+        }
     }
 
     public void notes(long chat_id) {
         try {
             InlineKeyboardMarkup markup = bot.getNoteMarkup();
-            SendMessage message = bot.sendMarkup(chat_id, "Notas: ",markup);
+            SendMessage message = bot.sendMarkup(chat_id, "Notas: ", markup);
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();

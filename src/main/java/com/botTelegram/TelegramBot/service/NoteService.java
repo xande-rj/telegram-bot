@@ -8,6 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -41,13 +42,17 @@ public class NoteService {
                 .build();
         return markup;
     }
-    public Note save(Note note) {
-        return noteRepository.save(note);
+    public Note save(String text,Long chatId) {
+        Note savedNote =new Note();
+        savedNote.setChatId(chatId);
+        savedNote.setText(text);
+        savedNote.setCreatedAt(LocalDateTime.now());
+        return noteRepository.save(savedNote);
     }
     public void delete(Note note) {
         noteRepository.delete(note);
     }
-    public List<Note> findAll() {
-        return noteRepository.findAll();
+    public List<Note> findAll(Long chatId) {
+        return noteRepository.findAllByChatId(chatId);
     }
 }

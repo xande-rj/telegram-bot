@@ -1,9 +1,12 @@
 package com.botTelegram.TelegramBot.service;
 
 
+import com.botTelegram.TelegramBot.entity.Note;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+
+import java.util.List;
 
 @Service
 public class BotService {
@@ -40,6 +43,12 @@ public class BotService {
 
     public InlineKeyboardMarkup getNoteMarkup(){
         return noteService.getNotes();
+    }
+    public Note saveNote(String text,Long chatId){
+        return noteService.save(text,chatId);
+    }
+    public List<Note> getNotes(Long chatId){
+        return noteService.findAll(chatId);
     }
     public SendMessage sendMessage(Long chatId, String message) {
         return SendMessage // Create a message object
