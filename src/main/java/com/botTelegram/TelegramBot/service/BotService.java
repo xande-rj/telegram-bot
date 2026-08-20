@@ -44,30 +44,18 @@ public class BotService {
     public InlineKeyboardMarkup getNoteMarkup(){
         return noteService.getNotes();
     }
+
     public Note saveNote(String text,Long chatId){
         return noteService.save(text,chatId);
     }
+public void deleteNote(String text,Long chatId){
+        noteService.delete(text,chatId);
+}
     public String getNotes(Long chatId){
-        List<Note> notes = noteService.findAll(chatId);
-        StringBuilder mensagem = new StringBuilder("""
-                    Notas
-                    
-                    """);
-        for (int i = 0; i < notes.size(); i++) {
 
-            Note note = notes.get(i);
-
-            mensagem.append("""
-                        - %d
-                        📰 texto: %s
-
-                        """.formatted(
-                    i + 1,
-                    note.getText()
-            ));
-        }
-        return mensagem.toString();
+        return noteService.findAll(chatId);
     }
+
     public SendMessage sendMessage(Long chatId, String message) {
         return SendMessage // Create a message object
                 .builder()
@@ -76,6 +64,7 @@ public class BotService {
                 .build();
 
     }
+
     public SendMessage sendMarkup(Long chatId, String message,InlineKeyboardMarkup markup) {
         return SendMessage.builder()
                 .chatId(chatId)

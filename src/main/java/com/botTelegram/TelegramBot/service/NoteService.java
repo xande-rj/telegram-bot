@@ -42,6 +42,7 @@ public class NoteService {
                 .build();
         return markup;
     }
+
     public Note save(String text,Long chatId) {
         Note savedNote =new Note();
         savedNote.setChatId(chatId);
@@ -49,10 +50,39 @@ public class NoteService {
         savedNote.setCreatedAt(LocalDateTime.now());
         return noteRepository.save(savedNote);
     }
-    public void delete(Note note) {
+
+    public void delete(String text,Long chatId) {
+        List<Note> notes = noteRepository.findAllByChatId(chatId);
+        Note note = notes.get(Integer.parseInt(text)-1);
         noteRepository.delete(note);
+        System.out.println("Note Deletado!" + note.getChatId());
+
+        System.out.println("Note Deletado!" + note.getText());
     }
-    public List<Note> findAll(Long chatId) {
-        return noteRepository.findAllByChatId(chatId);
+
+    public String findAll(Long chatId) {
+        List<Note> notes = noteRepository.findAllByChatId(chatId);
+
+        StringBuilder mensagem = new StringBuilder("""
+                    Notas
+                    
+                    """);
+        if(notes.isEmpty()){
+            return mensagem.append("Sem notas").toString();
+        }
+        for (int i = 0; i < notes.size(); i++) {
+
+            Note note = notes.get(i);
+
+            mensagem.append("""
+                        - %d
+                        📰 Nota: %s
+
+                        """.formatted(
+                    i + 1,
+                    note.getText()
+            ));
+        }
+        return mensagem.toString();
     }
 }

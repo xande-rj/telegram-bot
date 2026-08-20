@@ -62,6 +62,12 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 bot.saveNote(text, chat_id);
                 conversationStateService.limparEstado(chat_id);
                 execute(chat_id,"✅ Nota salva!");
+            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_NUMERO_NOTA")) {
+                String text = update.getMessage().getText();
+                bot.deleteNote(text,chat_id);
+                conversationStateService.limparEstado(chat_id);
+                execute(chat_id,"✅ Nota Deletada!");
+
             }
             if (update.getMessage().getText().contains("/")) {
                 String message_text = update.getMessage().getText().split("/")[1];
@@ -103,6 +109,9 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
             execute(chatId,bot.getNotes(chatId));
 
         } else if (callBack.equalsIgnoreCase("delete")) {
+            conversationStateService.definirEstado(chatId, "AGUARDANDO_NUMERO_NOTA");
+            execute(chatId,"📝 Digite o numero da nota que deseja deletar:");
+            execute(chatId,bot.getNotes(chatId));
 
         }
     }
