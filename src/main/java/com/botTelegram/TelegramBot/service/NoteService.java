@@ -43,31 +43,43 @@ public class NoteService {
         return markup;
     }
 
-    public Note save(String text,Long chatId) {
-        Note savedNote =new Note();
+    public Note save(String text, Long chatId) {
+        Note savedNote = new Note();
         savedNote.setChatId(chatId);
         savedNote.setText(text);
         savedNote.setCreatedAt(LocalDateTime.now());
         return noteRepository.save(savedNote);
     }
 
-    public void delete(String text,Long chatId) {
+    public boolean delete(String text, Long chatId) {
         List<Note> notes = noteRepository.findAllByChatId(chatId);
-        Note note = notes.get(Integer.parseInt(text)-1);
+        int indice;
+        try {
+            indice = Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return false;
+        }
+        if (indice < 1 || indice > notes.size()) {
+            return false;
+        }
+
+        Note note = notes.get(indice - 1);
         noteRepository.delete(note);
         System.out.println("Note Deletado!" + note.getChatId());
 
         System.out.println("Note Deletado!" + note.getText());
+        return true;
     }
 
     public String findAll(Long chatId) {
         List<Note> notes = noteRepository.findAllByChatId(chatId);
 
         StringBuilder mensagem = new StringBuilder("""
-                    Notas
-                    
-                    """);
-        if(notes.isEmpty()){
+                Notas
+                
+                """);
+        if (notes.isEmpty()) {
             return mensagem.append("Sem notas").toString();
         }
         for (int i = 0; i < notes.size(); i++) {
@@ -75,10 +87,10 @@ public class NoteService {
             Note note = notes.get(i);
 
             mensagem.append("""
-                        - %d
-                        📰 Nota: %s
-
-                        """.formatted(
+                    - %d
+                    📰 Nota: %s
+                    
+                    """.formatted(
                     i + 1,
                     note.getText()
             ));

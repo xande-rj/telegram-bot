@@ -61,12 +61,17 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 String text = update.getMessage().getText();
                 bot.saveNote(text, chat_id);
                 conversationStateService.limparEstado(chat_id);
-                execute(chat_id,"✅ Nota salva!");
+                execute(chat_id, "✅ Nota salva!");
             } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_NUMERO_NOTA")) {
                 String text = update.getMessage().getText();
-                bot.deleteNote(text,chat_id);
-                conversationStateService.limparEstado(chat_id);
-                execute(chat_id,"✅ Nota Deletada!");
+                boolean sucesso = bot.deleteNote(text, chat_id);
+                if (sucesso) {
+                    conversationStateService.limparEstado(chat_id);
+                    execute(chat_id, "✅ Nota Deletada!");
+                } else {
+                    execute(chat_id, "⚠️ Número inválido. Digite o número correspondente à nota que deseja deletar:");
+                }
+
 
             }
             if (update.getMessage().getText().contains("/")) {
@@ -103,15 +108,15 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
         if (callBack.equalsIgnoreCase("save")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_TEXTO_NOTA");
-            execute(chatId,"📝 Digite o texto da sua nota:");
+            execute(chatId, "📝 Digite o texto da sua nota:");
 
         } else if (callBack.equalsIgnoreCase("get")) {
-            execute(chatId,bot.getNotes(chatId));
+            execute(chatId, bot.getNotes(chatId));
 
         } else if (callBack.equalsIgnoreCase("delete")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_NUMERO_NOTA");
-            execute(chatId,"📝 Digite o numero da nota que deseja deletar:");
-            execute(chatId,bot.getNotes(chatId));
+            execute(chatId, "📝 Digite o numero da nota que deseja deletar:");
+            execute(chatId, bot.getNotes(chatId));
 
         }
     }

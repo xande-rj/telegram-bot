@@ -41,17 +41,19 @@ public class BotService {
         return newsService.getNews();
     }
 
-    public InlineKeyboardMarkup getNoteMarkup(){
+    public InlineKeyboardMarkup getNoteMarkup() {
         return noteService.getNotes();
     }
 
-    public Note saveNote(String text,Long chatId){
-        return noteService.save(text,chatId);
+    public Note saveNote(String text, Long chatId) {
+        return noteService.save(text, chatId);
     }
-public void deleteNote(String text,Long chatId){
-        noteService.delete(text,chatId);
-}
-    public String getNotes(Long chatId){
+
+    public boolean deleteNote(String text, Long chatId) {
+        return noteService.delete(text, chatId);
+    }
+
+    public String getNotes(Long chatId) {
 
         return noteService.findAll(chatId);
     }
@@ -65,7 +67,7 @@ public void deleteNote(String text,Long chatId){
 
     }
 
-    public SendMessage sendMarkup(Long chatId, String message,InlineKeyboardMarkup markup) {
+    public SendMessage sendMarkup(Long chatId, String message, InlineKeyboardMarkup markup) {
         return SendMessage.builder()
                 .chatId(chatId)
                 .text(message)
@@ -73,7 +75,6 @@ public void deleteNote(String text,Long chatId){
                 .build();
 
     }
-
 
 
 }
