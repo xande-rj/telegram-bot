@@ -1,4 +1,4 @@
-# Telegram Bot (Omegamon)
+# Telegram Bot
 
 Bot de utilidades para o Telegram desenvolvido em **Java 21 + Spring Boot**, que integra várias APIs externas e permite salvar anotações pessoais direto pelo chat.
 
