@@ -24,6 +24,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,11 +72,11 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 } else {
                     execute(chat_id, "⚠️ Número inválido. Digite o número correspondente à nota que deseja deletar:");
                 }
-
-
             }
+
             if (update.getMessage().getText().contains("/")) {
                 String message_text = update.getMessage().getText().split("/")[1];
+
 
                 if (!rateLimiteService.permitir(chat_id)) {
                     avisarLimite(chat_id);
@@ -83,21 +84,23 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 }
                 if (message_text.equalsIgnoreCase("notas")) {
                     notes(chat_id);
-                }
-                if (message_text.equalsIgnoreCase("ola")) {
+                } else if (message_text.equalsIgnoreCase("ola")) {
                     helloWorld(chat_id);
-                }
-                if (message_text.equalsIgnoreCase("Tempo")) {
+                } else if (message_text.equalsIgnoreCase("tempo")) {
                     weather(chat_id);
+                } else if (message_text.equalsIgnoreCase("noticias")) {
+                    news(chat_id);
+                } else if (message_text.contains("traduzir")) {
+                    translate(chat_id, update.getMessage().getText());
+
                 }
                 for (String moeda : MOEDAS_STRING) {
                     if (message_text.equalsIgnoreCase(moeda)) {
                         coins(chat_id, moeda);
                     }
                 }
-                if (message_text.equalsIgnoreCase("noticias")) {
-                    news(chat_id);
-                }
+
+
             }
         }
     }
@@ -119,6 +122,25 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
             execute(chatId, bot.getNotes(chatId));
 
         }
+    }
+
+    public void translate(long chat_id, String text) {
+
+        String textoCompleto = text.replaceFirst("/traduzir\\s*", "").trim();
+        String mensagem =
+                "Use assim: /traduzir <idioma> <texto>\nEx: /traduzir inglês Bom dia!";
+        if (textoCompleto.isEmpty()) {
+            execute(chat_id, mensagem);
+        }
+String[] partes = textoCompleto.split(" ",2);
+        if(partes.length<2){
+            execute(chat_id, mensagem);
+        }
+        String idioma = partes[0];
+        String texto = partes[1];
+        String traducao  = bot.translate(idioma,texto);
+        execute(chat_id, traducao);
+
     }
 
     public void notes(long chat_id) {

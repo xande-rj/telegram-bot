@@ -22,7 +22,7 @@ public class TelegramCommandRegistrar {
                 new BotCommand("yuan","Cotacao do yuan a partir do real."),
                 new BotCommand("noticias","Atualizar as noticias."),
                 new BotCommand("notas","Veja as opcoes de notas."),
-                new BotCommand("traduzir","Traduza para a lingua que deseja.\n Use assim: /traduzir <idioma> <texto>\n Ex: /traduzir inglês Bom dia!")
+                new BotCommand("traduzir","Traduza para a lingua que deseja.")
 
 
 

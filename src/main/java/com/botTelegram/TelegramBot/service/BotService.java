@@ -16,17 +16,20 @@ public class BotService {
     private final WeatherService weatherService;
     private final NewsService newsService;
     private final NoteService noteService;
+    private final TranslateService translateService;
 
     public BotService(
             PriceService priceService,
             WeatherService weatherService,
             NewsService newsService,
-            NoteService noteService
+            NoteService noteService,
+            TranslateService translateService
     ) {
         this.priceService = priceService;
         this.weatherService = weatherService;
         this.newsService = newsService;
         this.noteService = noteService;
+        this.translateService = translateService;
     }
 
     public String getWeather() {
@@ -56,6 +59,10 @@ public class BotService {
     public String getNotes(Long chatId) {
 
         return noteService.findAll(chatId);
+    }
+
+    public String translate(String idioma, String texto) {
+        return translateService.translate(idioma,texto);
     }
 
     public SendMessage sendMessage(Long chatId, String message) {
