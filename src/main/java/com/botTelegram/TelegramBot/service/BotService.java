@@ -2,6 +2,7 @@ package com.botTelegram.TelegramBot.service;
 
 
 import com.botTelegram.TelegramBot.entity.Note;
+import com.botTelegram.TelegramBot.response.GeminiResponse;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -62,7 +63,8 @@ public class BotService {
     }
 
     public String translate(String idioma, String texto) {
-        return translateService.translate(idioma,texto);
+        GeminiResponse response =  translateService.translate(idioma,texto);
+        return response.candidates().getFirst().content().parts().getFirst().text();
     }
 
     public SendMessage sendMessage(Long chatId, String message) {

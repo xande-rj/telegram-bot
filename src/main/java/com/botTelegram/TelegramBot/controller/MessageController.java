@@ -12,9 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.telegram.telegrambots.longpolling.util.DefaultLongPollingUpdateConsumer;
+import org.telegram.telegrambots.meta.api.methods.ActionType;
+import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -138,8 +142,29 @@ String[] partes = textoCompleto.split(" ",2);
         }
         String idioma = partes[0];
         String texto = partes[1];
-        String traducao  = bot.translate(idioma,texto);
-        execute(chat_id, traducao);
+
+        try {
+
+
+            Message temp = telegramClient.execute(SendMessage.builder()
+                    .chatId(chat_id)
+                    .text("🌐 Traduzindo para " + idioma + "...")
+                    .build());
+            String traducao  = bot.translate(idioma,texto);
+
+
+            telegramClient.execute(EditMessageText.builder()
+                    .chatId(chat_id)
+                    .messageId(temp.getMessageId())
+                    .text(traducao)
+                    .build());
+
+        }catch (TelegramApiException e){
+            e.printStackTrace();
+        }
+
+
+
 
     }
 
