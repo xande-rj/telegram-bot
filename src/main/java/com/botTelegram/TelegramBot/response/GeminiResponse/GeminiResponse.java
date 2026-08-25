@@ -1,4 +1,4 @@
-package com.botTelegram.TelegramBot.response;
+package com.botTelegram.TelegramBot.response.GeminiResponse;
 
 import java.util.List;
 

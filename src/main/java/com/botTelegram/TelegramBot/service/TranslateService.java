@@ -1,17 +1,14 @@
 package com.botTelegram.TelegramBot.service;
 
-import com.botTelegram.TelegramBot.response.Content;
-import com.botTelegram.TelegramBot.response.GeminiRequest;
-import com.botTelegram.TelegramBot.response.GeminiResponse;
-import com.botTelegram.TelegramBot.response.Part;
+import com.botTelegram.TelegramBot.response.GeminiRequest.Content;
+import com.botTelegram.TelegramBot.response.GeminiRequest.GeminiRequest;
+import com.botTelegram.TelegramBot.response.GeminiResponse.GeminiResponse;
+import com.botTelegram.TelegramBot.response.GeminiRequest.Part;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class TranslateService {
@@ -32,26 +29,24 @@ public class TranslateService {
         );
 
         GeminiRequest request = new GeminiRequest(
-          List.of(
-                  new Content(
-                          "user",
-                          List.of(
-                                  new Part(prompt)
-                          )
-                  )
-          )
+                List.of(
+                        new Content(
+                                "user",
+                                List.of(
+                                        new Part(prompt)
+                                )
+                        )
+                )
         );
 
-
-           GeminiResponse response = restClient.post()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/v1beta/models/gemini-3.5-flash-lite:generateContent")
-                            .queryParam("key", apiKey)
-                            .build())
-                    .body(request)
-                    .retrieve()
-                    .body(GeminiResponse.class);
-
+        GeminiResponse response = restClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/v1beta/models/gemini-3.5-flash-lite:generateContent")
+                        .queryParam("key", apiKey)
+                        .build())
+                .body(request)
+                .retrieve()
+                .body(GeminiResponse.class);
 
         return response;
     }

@@ -2,12 +2,10 @@ package com.botTelegram.TelegramBot.service;
 
 
 import com.botTelegram.TelegramBot.entity.Note;
-import com.botTelegram.TelegramBot.response.GeminiResponse;
+import com.botTelegram.TelegramBot.response.GeminiResponse.GeminiResponse;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-
-import java.util.List;
 
 @Service
 public class BotService {

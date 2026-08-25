@@ -56,8 +56,8 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
             onUpdateReceived(update.getCallbackQuery());
             return;
         }
-        if (update.hasMessage() && update.getMessage().hasText()) {
 
+        if (update.hasMessage() && update.getMessage().hasText()) {
 
             long chat_id = update.getMessage().getChatId();
             Optional<String> estado = conversationStateService.getEstado(chat_id);
@@ -136,8 +136,8 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
         if (textoCompleto.isEmpty()) {
             execute(chat_id, mensagem);
         }
-String[] partes = textoCompleto.split(" ",2);
-        if(partes.length<2){
+        String[] partes = textoCompleto.split(" ", 2);
+        if (partes.length < 2) {
             execute(chat_id, mensagem);
         }
         String idioma = partes[0];
@@ -150,7 +150,7 @@ String[] partes = textoCompleto.split(" ",2);
                     .chatId(chat_id)
                     .text("🌐 Traduzindo para " + idioma + "...")
                     .build());
-            String traducao  = bot.translate(idioma,texto);
+            String traducao = bot.translate(idioma, texto);
 
 
             telegramClient.execute(EditMessageText.builder()
@@ -159,11 +159,9 @@ String[] partes = textoCompleto.split(" ",2);
                     .text(traducao)
                     .build());
 
-        }catch (TelegramApiException e){
+        } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-
-
 
 
     }
