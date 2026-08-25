@@ -39,9 +39,11 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
     private final String[] MOEDAS_STRING = new String[]{"dolar", "euro", "iene", "yuan"};
     private final RateLimiteService rateLimiteService;
 
-    public MessageController(TelegramClient telegramClient, RateLimiteService rateLimiteService) {
+    private final TelegramMessageSender telegramMessageSender;
+    public MessageController(TelegramClient telegramClient, RateLimiteService rateLimiteService, TelegramMessageSender telegramMessageSender) {
         this.telegramClient = telegramClient;
         this.rateLimiteService = rateLimiteService;
+        this.telegramMessageSender = telegramMessageSender;
 
     }
 
@@ -66,15 +68,15 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 String text = update.getMessage().getText();
                 bot.saveNote(text, chat_id);
                 conversationStateService.limparEstado(chat_id);
-                execute(chat_id, "✅ Nota salva!");
+                telegramMessageSender.sendMessage(chat_id, "✅ Nota salva!");
             } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_NUMERO_NOTA")) {
                 String text = update.getMessage().getText();
                 boolean sucesso = bot.deleteNote(text, chat_id);
                 if (sucesso) {
                     conversationStateService.limparEstado(chat_id);
-                    execute(chat_id, "✅ Nota Deletada!");
+                    telegramMessageSender.sendMessage(chat_id, "✅ Nota Deletada!");
                 } else {
-                    execute(chat_id, "⚠️ Número inválido. Digite o número correspondente à nota que deseja deletar:");
+                    telegramMessageSender.sendMessage(chat_id, "⚠️ Número inválido. Digite o número correspondente à nota que deseja deletar:");
                 }
             }
 
@@ -115,15 +117,15 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
         if (callBack.equalsIgnoreCase("save")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_TEXTO_NOTA");
-            execute(chatId, "📝 Digite o texto da sua nota:");
+            telegramMessageSender.sendMessage(chatId, "📝 Digite o texto da sua nota:");
 
         } else if (callBack.equalsIgnoreCase("get")) {
-            execute(chatId, bot.getNotes(chatId));
+            telegramMessageSender.sendMessage(chatId, bot.getNotes(chatId));
 
         } else if (callBack.equalsIgnoreCase("delete")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_NUMERO_NOTA");
-            execute(chatId, "📝 Digite o numero da nota que deseja deletar:");
-            execute(chatId, bot.getNotes(chatId));
+            telegramMessageSender.sendMessage(chatId, "📝 Digite o numero da nota que deseja deletar:");
+            telegramMessageSender.sendMessage(chatId, bot.getNotes(chatId));
 
         }
     }
@@ -134,11 +136,11 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
         String mensagem =
                 "Use assim: /traduzir <idioma> <texto>\nEx: /traduzir inglês Bom dia!";
         if (textoCompleto.isEmpty()) {
-            execute(chat_id, mensagem);
+            telegramMessageSender.sendMessage(chat_id, mensagem);
         }
         String[] partes = textoCompleto.split(" ", 2);
         if (partes.length < 2) {
-            execute(chat_id, mensagem);
+            telegramMessageSender.sendMessage(chat_id, mensagem);
         }
         String idioma = partes[0];
         String texto = partes[1];
@@ -179,49 +181,38 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
     public void avisarLimite(long chat_id) {
         String mensagem =
                 "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
-        execute(chat_id, mensagem);
+        telegramMessageSender.sendMessage(chat_id, mensagem);
 
     }
 
     private void news(long chat_id) {
-        execute(
+        telegramMessageSender.sendMessage(
                 chat_id,
                 bot.getNews()
         );
     }
 
     private void helloWorld(long chat_id) {
-        execute(
+        telegramMessageSender.sendMessage(
                 chat_id,
                 "Olá! Como posso ajudar?"
         );
     }
 
     private void weather(long chat_id) {
-        execute(
+        telegramMessageSender.sendMessage(
                 chat_id,
                 bot.getWeather()
         );
     }
 
     private void coins(long chat_id, String moeda) {
-        execute(
+        telegramMessageSender.sendMessage(
                 chat_id,
                 bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
         );
     }
 
-    private void execute(Long chat_id, String text) {
-        try {
-            SendMessage message = bot.sendMessage(
-                    chat_id,
-                    text
-            );
-            telegramClient.execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
 }
 
 
