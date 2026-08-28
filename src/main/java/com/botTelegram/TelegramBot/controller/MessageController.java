@@ -1,38 +1,31 @@
 package com.botTelegram.TelegramBot.controller;
 
 import com.botTelegram.TelegramBot.Enum.Coins;
-import com.botTelegram.TelegramBot.entity.Note;
-import com.botTelegram.TelegramBot.response.NewsResponse.ArticleResponse;
+import com.botTelegram.TelegramBot.exception.BotUserException;
 import com.botTelegram.TelegramBot.service.BotService;
 
 import com.botTelegram.TelegramBot.service.ConversationStateService;
 import com.botTelegram.TelegramBot.service.RateLimiteService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Component;
 
+import org.telegram.telegrambots.longpolling.exceptions.TelegramApiErrorResponseException;
 import org.telegram.telegrambots.longpolling.util.DefaultLongPollingUpdateConsumer;
-import org.telegram.telegrambots.meta.api.methods.ActionType;
-import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 
+@Slf4j
 @Component
 public class MessageController extends DefaultLongPollingUpdateConsumer {
     private final TelegramClient telegramClient;
@@ -162,7 +155,8 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                     .build());
 
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Erro inesperado ao traduzir", e);
+            throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente.");
         }
 
 
@@ -173,8 +167,12 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
             InlineKeyboardMarkup markup = bot.getNoteMarkup();
             SendMessage message = bot.sendMarkup(chat_id, "Notas: ", markup);
             telegramClient.execute(message);
+        } catch (TelegramApiErrorResponseException e) {
+            log.error("Erro inesperado na resposta da api", e);
+            throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente.");
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Erro inesperado na api", e);
+            throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente.");
         }
     }
 
@@ -186,6 +184,7 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
     }
 
     private void news(long chat_id) {
+
         telegramMessageSender.sendMessage(
                 chat_id,
                 bot.getNews()

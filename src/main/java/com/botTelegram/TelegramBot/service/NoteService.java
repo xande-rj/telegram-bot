@@ -1,7 +1,9 @@
 package com.botTelegram.TelegramBot.service;
 
 import com.botTelegram.TelegramBot.entity.Note;
+import com.botTelegram.TelegramBot.exception.BotUserException;
 import com.botTelegram.TelegramBot.repository.NoteRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -12,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
+
 public class NoteService {
     @Autowired
     private NoteRepository noteRepository;
@@ -57,8 +61,8 @@ public class NoteService {
         try {
             indice = Integer.parseInt(text.trim());
         } catch (NumberFormatException e) {
-            e.printStackTrace();
-            return false;
+            log.error("Erro de conversao de variavel", e);
+            throw new BotUserException("⚠\uFE0F Algo deu errado. Tente o alguns do numeros informados.");
         }
         if (indice < 1 || indice > notes.size()) {
             return false;
