@@ -1,9 +1,11 @@
 package com.botTelegram.TelegramBot.service;
 
+import com.botTelegram.TelegramBot.exception.BotUserException;
 import com.botTelegram.TelegramBot.response.WeatherResponse.WeatherResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
+@Slf4j
 @Service
 public class WeatherService {
     private final String WEATHER_URL;
@@ -27,14 +29,24 @@ public class WeatherService {
     }
 
     private WeatherResponse sendWeather() {
-        return this.restClient.getRestClient().get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/weather")
-                        .queryParam("lat", lat)
-                        .queryParam("lon", lon)
-                        .queryParam("appid", appid).build()
-                ).retrieve()
-                .body(WeatherResponse.class);
+        try {
+
+
+            return this.restClient.getRestClient().get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/weather")
+                            .queryParam("lat", lat)
+                            .queryParam("lon", lon)
+                            .queryParam("appid", appid).build()
+                    ).retrieve()
+                    .body(WeatherResponse.class);
+        } catch (IllegalArgumentException e) {
+        log.error("Erro inesperado na resposta da api", e);
+        throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente mais tarde.");
+    } catch (Exception e) {
+        log.error("Erro inesperado na api de Weather", e);
+        throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente.");
+    }
     }
 
     public String getWeather() {
