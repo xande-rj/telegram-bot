@@ -30,7 +30,7 @@ public class NewsService {
     private NewsResponse sendNews() {
         LocalDate date = LocalDate.now();
         try {
-            NewsResponse data = restClient.getRestClient().get().uri(
+            return restClient.getRestClient().get().uri(
                             uriBuilder -> uriBuilder
                                     .queryParam("from", date)
                                     .queryParam("to", date)
@@ -39,7 +39,7 @@ public class NewsService {
                                     .build()
                     ).retrieve()
                     .body(NewsResponse.class);
-            return data;
+
 
         } catch (IllegalArgumentException e) {
             log.error("Erro inesperado na resposta da api", e);
