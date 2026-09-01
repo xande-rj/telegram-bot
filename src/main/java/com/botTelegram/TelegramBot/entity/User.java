@@ -15,7 +15,8 @@ public class User {
     @Id
     private Long chatId;
 
-    private String cidade; // pra buscar o clima certo de cada um
+    private Float latitude;
+    private Float longitude;
 
     private boolean resumoDiarioAtivo = false;
 }
