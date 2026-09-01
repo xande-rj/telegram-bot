@@ -22,7 +22,8 @@ public class TelegramCommandRegistrar {
                 new BotCommand("yuan","Cotacao do yuan a partir do real."),
                 new BotCommand("noticias","Atualizar as noticias."),
                 new BotCommand("notas","Veja as opcoes de notas."),
-                new BotCommand("traduzir","Traduza para a lingua que deseja.")
+                new BotCommand("traduzir","Traduza para a lingua que deseja."),
+                new BotCommand("resumodiario","Ative para receber um resumo diario das principais noticias, mudancas na moedas e sobre o tempo.")
 
 
 

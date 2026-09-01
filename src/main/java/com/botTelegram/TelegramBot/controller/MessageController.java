@@ -1,7 +1,9 @@
 package com.botTelegram.TelegramBot.controller;
 
 import com.botTelegram.TelegramBot.Enum.Coins;
+import com.botTelegram.TelegramBot.entity.User;
 import com.botTelegram.TelegramBot.exception.BotUserException;
+import com.botTelegram.TelegramBot.repository.UserRepository;
 import com.botTelegram.TelegramBot.service.BotService;
 
 import com.botTelegram.TelegramBot.service.ConversationStateService;
@@ -9,6 +11,7 @@ import com.botTelegram.TelegramBot.service.RateLimiteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import org.telegram.telegrambots.longpolling.exceptions.TelegramApiErrorResponseException;
@@ -31,12 +34,16 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
     private final TelegramClient telegramClient;
     private final String[] MOEDAS_STRING = new String[]{"dolar", "euro", "iene", "yuan"};
     private final RateLimiteService rateLimiteService;
+    private final String MENSAGEM_LIMITE = "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
 
     private final TelegramMessageSender telegramMessageSender;
-    public MessageController(TelegramClient telegramClient, RateLimiteService rateLimiteService, TelegramMessageSender telegramMessageSender) {
+    private final UserRepository  userRepository;
+
+    public MessageController(TelegramClient telegramClient, RateLimiteService rateLimiteService, TelegramMessageSender telegramMessageSender, UserRepository userRepository) {
         this.telegramClient = telegramClient;
         this.rateLimiteService = rateLimiteService;
         this.telegramMessageSender = telegramMessageSender;
+        this.userRepository = userRepository;
 
     }
 
@@ -92,6 +99,9 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 } else if (message_text.contains("traduzir")) {
                     translate(chat_id, update.getMessage().getText());
 
+                } else if (message_text.equalsIgnoreCase("resumodiario")) {
+                    resumoDiario(chat_id);
+
                 }
                 for (String moeda : MOEDAS_STRING) {
                     if (message_text.equalsIgnoreCase(moeda)) {
@@ -101,6 +111,23 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
 
             }
+        }
+    }
+    private void resumoDiario(long chat_id) {
+        if(userRepository.findById(chat_id).isPresent()) {
+            User user = userRepository.findById(chat_id).get();
+            user.setResumoDiarioAtivo(!user.isResumoDiarioAtivo());
+            userRepository.save(user);
+            String status = user.isResumoDiarioAtivo() ? "ativado ✅" : "desativado ❌";
+            telegramMessageSender.sendMessage(chat_id,status);
+        }
+        else {
+            User user = new User();
+            user.setChatId(chat_id);
+            user.setResumoDiarioAtivo(true);
+            userRepository.save(user);
+            String status = user.isResumoDiarioAtivo() ? "ativado ✅" : "desativado ❌";
+            telegramMessageSender.sendMessage(chat_id, status);
         }
     }
 
@@ -139,14 +166,12 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
         String texto = partes[1];
 
         try {
-
-
             Message temp = telegramClient.execute(SendMessage.builder()
                     .chatId(chat_id)
                     .text("🌐 Traduzindo para " + idioma + "...")
                     .build());
-            String traducao = bot.translate(idioma, texto);
 
+            String traducao = bot.translate(idioma, texto);
 
             telegramClient.execute(EditMessageText.builder()
                     .chatId(chat_id)
@@ -177,9 +202,7 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
     }
 
     public void avisarLimite(long chat_id) {
-        String mensagem =
-                "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
-        telegramMessageSender.sendMessage(chat_id, mensagem);
+        telegramMessageSender.sendMessage(chat_id, MENSAGEM_LIMITE);
 
     }
 
