@@ -2,10 +2,14 @@ package com.botTelegram.TelegramBot.service;
 
 
 import com.botTelegram.TelegramBot.entity.Note;
+import com.botTelegram.TelegramBot.entity.User;
+import com.botTelegram.TelegramBot.repository.UserRepository;
 import com.botTelegram.TelegramBot.response.GeminiResponse.GeminiResponse;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+
+import java.util.Map;
 
 @Service
 public class BotService {
@@ -16,19 +20,25 @@ public class BotService {
     private final NewsService newsService;
     private final NoteService noteService;
     private final TranslateService translateService;
+    private final GeoService geoService;
+    private final UserRepository userRepository;
 
     public BotService(
             PriceService priceService,
             WeatherService weatherService,
             NewsService newsService,
             NoteService noteService,
-            TranslateService translateService
+            TranslateService translateService,
+            GeoService geoService,
+            UserRepository userRepository
     ) {
         this.priceService = priceService;
         this.weatherService = weatherService;
         this.newsService = newsService;
         this.noteService = noteService;
         this.translateService = translateService;
+        this.geoService = geoService;
+        this.userRepository = userRepository;
     }
 
     public String getWeather() {
@@ -55,6 +65,18 @@ public class BotService {
         return noteService.delete(text, chatId);
     }
 
+    public boolean geoStats(String cidade, Long chatId) {
+        Map<String,Double> geo = this.geoService.getLocation(cidade);
+        User user = this.userRepository.findById(chatId).orElseGet(()-> {
+                    User novo = new User();
+                    novo.setChatId(chatId);
+                    return novo;
+        });
+        user.setLatitude(geo.get("latitude"));
+        user.setLongitude(geo.get("longitude"));
+        userRepository.save(user);
+        return true;
+    }
     public String getNotes(Long chatId) {
 
         return noteService.findAll(chatId);

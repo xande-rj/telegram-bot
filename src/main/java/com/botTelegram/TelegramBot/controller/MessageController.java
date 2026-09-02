@@ -78,6 +78,16 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                 } else {
                     telegramMessageSender.sendMessage(chat_id, "⚠️ Número inválido. Digite o número correspondente à nota que deseja deletar:");
                 }
+            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_CIDADE")) {
+
+                String text = update.getMessage().getText();
+                if(bot.geoStats(text,chat_id)) {
+                    telegramMessageSender.sendMessage(chat_id, "✅ Criado com sucesso!");
+                }
+                else {
+                    telegramMessageSender.sendMessage(chat_id, "❌ Erro ao cadastra localizacao. Tente novamente em alguns segundos.!");
+                }
+                conversationStateService.limparEstado(chat_id);
             }
 
             if (update.getMessage().getText().contains("/")) {
@@ -103,6 +113,10 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
                     resumoDiario(chat_id);
 
                 }
+                else if (message_text.equalsIgnoreCase("localizacao")) {
+                    localizacao(chat_id);
+
+                }
                 for (String moeda : MOEDAS_STRING) {
                     if (message_text.equalsIgnoreCase(moeda)) {
                         coins(chat_id, moeda);
@@ -112,6 +126,10 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
             }
         }
+    }
+    private void localizacao(long chat_id) {
+        conversationStateService.definirEstado(chat_id, "AGUARDANDO_CIDADE");
+        telegramMessageSender.sendMessage(chat_id, "🏙️ Digite o nome da sua cidade (ex: São Paulo):");
     }
     private void resumoDiario(long chat_id) {
         if(userRepository.findById(chat_id).isPresent()) {

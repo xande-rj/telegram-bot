@@ -33,7 +33,7 @@ public class DailySummaryScheduler {
         this.userRepository = userRepository;
     }
 
-    @Scheduled(fixedRate = 10000)
+    //@Scheduled(fixedRate = 10000)
     public void resumoDiario(){
     log.info("iniciando resumo diario...");
     List<User> usuarios = userRepository.findAllByResumoDiarioAtivoTrue();
