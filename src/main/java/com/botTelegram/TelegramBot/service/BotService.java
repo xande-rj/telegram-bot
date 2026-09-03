@@ -87,15 +87,6 @@ public class BotService {
         return response.candidates().getFirst().content().parts().getFirst().text();
     }
 
-    public SendMessage sendMessage(Long chatId, String message) {
-        return SendMessage // Create a message object
-                .builder()
-                .chatId(chatId)
-                .text(message)
-                .build();
-
-    }
-
     public SendMessage sendMarkup(Long chatId, String message, InlineKeyboardMarkup markup) {
         return SendMessage.builder()
                 .chatId(chatId)
