@@ -29,6 +29,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,8 +46,14 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
     public MessageController(
                              TelegramMessageSender telegramMessageSender,
                              List<BotCommandHandler> handlerList) {
-        this.handlers = handlerList.stream()
-                .collect(Collectors.toMap(BotCommandHandler::getCommand, h -> h));
+
+        Map<String, BotCommandHandler> handlerMap = new HashMap<>();
+        for (BotCommandHandler handler : handlerList) {
+            for (String command : handler.getCommand()) {
+                handlerMap.put(command, handler);
+            }
+        }
+        this.handlers = handlerMap;
         this.telegramMessageSender = telegramMessageSender;
     }
 

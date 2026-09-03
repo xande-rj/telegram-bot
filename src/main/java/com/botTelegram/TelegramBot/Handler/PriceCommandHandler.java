@@ -1,8 +1,9 @@
 package com.botTelegram.TelegramBot.Handler;
 
+import com.botTelegram.TelegramBot.Enum.Coins;
 import com.botTelegram.TelegramBot.Interfaces.BotCommandHandler;
 import com.botTelegram.TelegramBot.controller.TelegramMessageSender;
-import com.botTelegram.TelegramBot.service.NewsService;
+import com.botTelegram.TelegramBot.service.PriceService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -11,25 +12,26 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import java.util.List;
 
 @Component
-public class NewsCommandHandler implements BotCommandHandler {
-    private final NewsService newsService;
+public class PriceCommandHandler implements BotCommandHandler {
+    private final PriceService priceService;
     private final TelegramMessageSender telegramMessageSender;
 
-    public NewsCommandHandler(NewsService newsService, TelegramMessageSender telegramMessageSender) {
-        this.newsService = newsService;
+    public PriceCommandHandler(PriceService priceService, TelegramMessageSender telegramMessageSender) {
+        this.priceService = priceService;
         this.telegramMessageSender = telegramMessageSender;
     }
 
     @Override
     public List<String> getCommand() {
-        return List.of("/noticias");
+        return List.of("/dolar", "/euro", "/iene", "/yuan");
     }
 
     @Override
     public void handle(Update update, TelegramClient telegramClient) throws TelegramApiException {
-        Long chatId = update.getMessage().getChatId();
-        String news = this.newsService.getNews();
-        this.telegramMessageSender.sendMessage(chatId, news);
+
+        String coin = Coins.valueOf(update.getMessage().getText().split("/")[1].toUpperCase()).getCoin();
+        String price = this.priceService.getPrice(coin);
+        this.telegramMessageSender.sendMessage(update.getMessage().getChatId(), price);
 
     }
 }

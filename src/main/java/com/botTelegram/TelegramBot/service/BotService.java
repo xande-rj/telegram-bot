@@ -49,9 +49,6 @@ public class BotService {
         return priceService.getPrice(moeda);
     }
 
-    public String getNews() {
-        return newsService.getNews();
-    }
 
     public InlineKeyboardMarkup getNoteMarkup() {
         return noteService.getNotes();
