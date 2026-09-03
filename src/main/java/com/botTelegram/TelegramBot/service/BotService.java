@@ -45,10 +45,6 @@ public class BotService {
         return weatherService.getWeather();
     }
 
-    public String getPrice(String moeda) {
-        return priceService.getPrice(moeda);
-    }
-
 
     public InlineKeyboardMarkup getNoteMarkup() {
         return noteService.getNotes();
@@ -75,7 +71,6 @@ public class BotService {
         return true;
     }
     public String getNotes(Long chatId) {
-
         return noteService.findAll(chatId);
     }
 
