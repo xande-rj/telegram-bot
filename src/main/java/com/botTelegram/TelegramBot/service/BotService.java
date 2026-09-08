@@ -45,21 +45,6 @@ public class BotService {
         return weatherService.getWeather();
     }
 
-
-    public InlineKeyboardMarkup getNoteMarkup() {
-        return noteService.getNotes();
-    }
-
-    public Note saveNote(String text, Long chatId) {
-        return noteService.save(text, chatId);
-    }
-
-    public boolean deleteNote(String text, Long chatId) {
-        return noteService.delete(text, chatId);
-    }
-    public String getNotes(Long chatId) {
-        return noteService.findAll(chatId);
-    }
     public boolean geoStats(String cidade, Long chatId) {
         Map<String,Double> geo = this.geoService.getLocation(cidade);
         User user = this.userRepository.findById(chatId).orElseGet(()-> {
