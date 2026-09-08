@@ -57,7 +57,9 @@ public class BotService {
     public boolean deleteNote(String text, Long chatId) {
         return noteService.delete(text, chatId);
     }
-
+    public String getNotes(Long chatId) {
+        return noteService.findAll(chatId);
+    }
     public boolean geoStats(String cidade, Long chatId) {
         Map<String,Double> geo = this.geoService.getLocation(cidade);
         User user = this.userRepository.findById(chatId).orElseGet(()-> {
@@ -70,23 +72,14 @@ public class BotService {
         userRepository.save(user);
         return true;
     }
-    public String getNotes(Long chatId) {
-        return noteService.findAll(chatId);
-    }
+
 
     public String translate(String idioma, String texto) {
         GeminiResponse response =  translateService.translate(idioma,texto);
         return response.candidates().getFirst().content().parts().getFirst().text();
     }
 
-    public SendMessage sendMarkup(Long chatId, String message, InlineKeyboardMarkup markup) {
-        return SendMessage.builder()
-                .chatId(chatId)
-                .text(message)
-                .replyMarkup(markup)
-                .build();
 
-    }
 
 
 }

@@ -4,37 +4,28 @@ import com.botTelegram.TelegramBot.Enum.Coins;
 import com.botTelegram.TelegramBot.Interfaces.BotCommandHandler;
 import com.botTelegram.TelegramBot.entity.User;
 import com.botTelegram.TelegramBot.exception.BotUserException;
-import com.botTelegram.TelegramBot.repository.UserRepository;
-import com.botTelegram.TelegramBot.service.BotService;
+
 
 import com.botTelegram.TelegramBot.service.ConversationStateService;
-import com.botTelegram.TelegramBot.service.RateLimiteService;
-import lombok.extern.slf4j.Slf4j;
+import com.botTelegram.TelegramBot.service.NoteService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.scheduling.annotation.Scheduled;
+
 import org.springframework.stereotype.Component;
 
-import org.telegram.telegrambots.longpolling.exceptions.TelegramApiErrorResponseException;
-import org.telegram.telegrambots.longpolling.util.DefaultLongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
+
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 
 @Component
@@ -42,11 +33,17 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
     private static final Logger log = LoggerFactory.getLogger(MessageController.class);
     private final TelegramMessageSender telegramMessageSender;
     private final Map<String, BotCommandHandler> handlers;
+    private final NoteService noteService;
+
+    @Autowired
+    private ConversationStateService conversationStateService;
 
     public MessageController(
-                             TelegramMessageSender telegramMessageSender,
-                             List<BotCommandHandler> handlerList) {
-
+            TelegramMessageSender telegramMessageSender,
+            List<BotCommandHandler> handlerList,
+            NoteService noteService
+    ) {
+        this.noteService = noteService;
         Map<String, BotCommandHandler> handlerMap = new HashMap<>();
         for (BotCommandHandler handler : handlerList) {
             for (String command : handler.getCommand()) {
@@ -58,14 +55,26 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
     }
 
 
-
     @Override
     public void consume(Update update) {
+        if (update.hasCallbackQuery()) {
+            onUpdateReceived(update.getCallbackQuery());
+            return;
+        }
         if (!update.hasMessage() || !update.getMessage().hasText()) {
             return;
         }
+
         Long chatId = update.getMessage().getChatId();
         try {
+            Optional<String> estado = conversationStateService.getEstado(chatId);
+            if (estado.isPresent() && estado.get().equals("AGUARDANDO_TEXTO_NOTA")) {
+                saveNote(chatId, update);
+                return;
+            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_NUMERO_NOTA")) {
+                deleteNote(chatId, update);
+                return;
+            }
 
             processarComando(update, chatId);
 
@@ -77,6 +86,37 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
             telegramMessageSender.sendMessage(chatId, "⚠️ Ocorreu um erro inesperado. Tente novamente.");
         }
 
+    }
+
+    public void saveNote(Long chatId, Update update) {
+        String text = update.getMessage().getText();
+        noteService.save(text, chatId);
+        conversationStateService.limparEstado(chatId);
+        telegramMessageSender.sendMessage(chatId, "✅ Nota salva!");
+
+    }
+public void deleteNote(Long chatId, Update update) {
+    String text = update.getMessage().getText();
+    noteService.delete(text, chatId);
+    conversationStateService.limparEstado(chatId);
+    telegramMessageSender.sendMessage(chatId, "✅ Nota deletada!");
+}
+    public void onUpdateReceived(CallbackQuery update) {
+        String callBack = update.getData();
+        Long chatId = update.getMessage().getChatId();
+
+        if (callBack.equalsIgnoreCase("save")) {
+            conversationStateService.definirEstado(chatId, "AGUARDANDO_TEXTO_NOTA");
+            telegramMessageSender.sendMessage(chatId, "📝 Digite o text  o da sua nota:");
+
+        } else if (callBack.equalsIgnoreCase("get")) {
+            telegramMessageSender.sendMessage(chatId,noteService.findAll(chatId));
+
+        } else if (callBack.equalsIgnoreCase("delete")) {
+            conversationStateService.definirEstado(chatId, "AGUARDANDO_NUMERO_NOTA");
+            telegramMessageSender.sendMessage(chatId,noteService.findAll(chatId));
+
+        }
     }
 
     private void processarComando(Update update, Long chatId) throws Exception {
