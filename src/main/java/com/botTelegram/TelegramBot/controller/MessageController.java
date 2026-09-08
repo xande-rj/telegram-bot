@@ -7,8 +7,10 @@ import com.botTelegram.TelegramBot.exception.BotUserException;
 
 
 import com.botTelegram.TelegramBot.service.ConversationStateService;
+import com.botTelegram.TelegramBot.service.GeoService;
 import com.botTelegram.TelegramBot.service.NoteService;
 
+import com.botTelegram.TelegramBot.service.WeatherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,14 +36,17 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
     private final TelegramMessageSender telegramMessageSender;
     private final Map<String, BotCommandHandler> handlers;
     private final NoteService noteService;
-
+    private final GeoService geoService;
+private final WeatherService weatherService;
     @Autowired
     private ConversationStateService conversationStateService;
 
     public MessageController(
             TelegramMessageSender telegramMessageSender,
             List<BotCommandHandler> handlerList,
-            NoteService noteService
+            NoteService noteService,
+            GeoService geoService,
+            WeatherService weatherService
     ) {
         this.noteService = noteService;
         Map<String, BotCommandHandler> handlerMap = new HashMap<>();
@@ -52,6 +57,8 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
         }
         this.handlers = handlerMap;
         this.telegramMessageSender = telegramMessageSender;
+        this.geoService = geoService;
+        this.weatherService = weatherService;
     }
 
 
@@ -74,8 +81,11 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
             } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_NUMERO_NOTA")) {
                 deleteNote(chatId, update);
                 return;
+            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_CIDADE")) {
+                saveGeo(chatId,update);
+                conversationStateService.limparEstado(chatId);
+                return;
             }
-
             processarComando(update, chatId);
 
         } catch (BotUserException e) {
@@ -84,6 +94,17 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
         } catch (Exception e) {
             log.error("Erro não tratado processando update de chatId={}", chatId, e);
             telegramMessageSender.sendMessage(chatId, "⚠️ Ocorreu um erro inesperado. Tente novamente.");
+        }
+
+    }
+
+    private void saveGeo(Long chatId, Update update) {
+        if(this.geoService.saveGeo(chatId,update)){
+            telegramMessageSender.sendMessage(chatId, "✅ Criado com sucesso!");
+            telegramMessageSender.sendMessage(chatId, this.weatherService.getWeather(chatId));
+        }
+        else {
+            telegramMessageSender.sendMessage(chatId, "❌ Erro ao cadastra localizacao. Tente novamente em alguns segundos.!");
         }
 
     }
@@ -133,6 +154,7 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
         }
 
         handler.handle(update, null);
+        
     }
 
 }

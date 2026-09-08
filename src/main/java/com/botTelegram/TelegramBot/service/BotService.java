@@ -15,55 +15,24 @@ import java.util.Map;
 public class BotService {
 
 
-    private final PriceService priceService;
     private final WeatherService weatherService;
-    private final NewsService newsService;
-    private final NoteService noteService;
-    private final TranslateService translateService;
+
     private final GeoService geoService;
     private final UserRepository userRepository;
 
     public BotService(
-            PriceService priceService,
             WeatherService weatherService,
-            NewsService newsService,
-            NoteService noteService,
-            TranslateService translateService,
             GeoService geoService,
             UserRepository userRepository
     ) {
-        this.priceService = priceService;
         this.weatherService = weatherService;
-        this.newsService = newsService;
-        this.noteService = noteService;
-        this.translateService = translateService;
         this.geoService = geoService;
         this.userRepository = userRepository;
     }
 
-    public String getWeather() {
-        return weatherService.getWeather();
-    }
-
-    public boolean geoStats(String cidade, Long chatId) {
-        Map<String,Double> geo = this.geoService.getLocation(cidade);
-        User user = this.userRepository.findById(chatId).orElseGet(()-> {
-                    User novo = new User();
-                    novo.setChatId(chatId);
-                    return novo;
-        });
-        user.setLatitude(geo.get("latitude"));
-        user.setLongitude(geo.get("longitude"));
-        userRepository.save(user);
-        return true;
-    }
-
-
-    public String translate(String idioma, String texto) {
-        GeminiResponse response =  translateService.translate(idioma,texto);
-        return response.candidates().getFirst().content().parts().getFirst().text();
-    }
-
+//    public String getWeather() {
+//        return weatherService.getWeather();
+//    }
 
 
 
