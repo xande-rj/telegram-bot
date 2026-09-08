@@ -95,12 +95,14 @@ public class MessageController implements LongPollingSingleThreadUpdateConsumer 
         telegramMessageSender.sendMessage(chatId, "✅ Nota salva!");
 
     }
-public void deleteNote(Long chatId, Update update) {
-    String text = update.getMessage().getText();
-    noteService.delete(text, chatId);
-    conversationStateService.limparEstado(chatId);
-    telegramMessageSender.sendMessage(chatId, "✅ Nota deletada!");
-}
+
+    public void deleteNote(Long chatId, Update update) {
+        String text = update.getMessage().getText();
+        noteService.delete(text, chatId);
+        conversationStateService.limparEstado(chatId);
+        telegramMessageSender.sendMessage(chatId, "✅ Nota deletada!");
+    }
+
     public void onUpdateReceived(CallbackQuery update) {
         String callBack = update.getData();
         Long chatId = update.getMessage().getChatId();
@@ -110,11 +112,11 @@ public void deleteNote(Long chatId, Update update) {
             telegramMessageSender.sendMessage(chatId, "📝 Digite o text  o da sua nota:");
 
         } else if (callBack.equalsIgnoreCase("get")) {
-            telegramMessageSender.sendMessage(chatId,noteService.findAll(chatId));
+            telegramMessageSender.sendMessage(chatId, noteService.findAll(chatId));
 
         } else if (callBack.equalsIgnoreCase("delete")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_NUMERO_NOTA");
-            telegramMessageSender.sendMessage(chatId,noteService.findAll(chatId));
+            telegramMessageSender.sendMessage(chatId, noteService.findAll(chatId));
 
         }
     }

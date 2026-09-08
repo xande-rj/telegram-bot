@@ -3,6 +3,8 @@ package com.botTelegram.TelegramBot.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
@@ -26,9 +28,39 @@ public class TelegramMessageSender {
         } catch (TelegramApiRequestException e) {
             errorTreatment(chat_id, e);
         } catch (TelegramApiException e) {
-           log.error("Erro inesperado ao enviar mensagem para chatId={}",chat_id,e);
+            log.error("Erro inesperado ao enviar mensagem para chatId={}", chat_id, e);
         }
     }
+
+    public Message sendTemp(Long chat_id, String texto) {
+        Message tempMessage = new Message();
+        try {
+            tempMessage = telegramClient.execute(SendMessage.builder()
+                    .chatId(chat_id)
+                    .text(texto)
+                    .build());
+        } catch (TelegramApiRequestException e) {
+            errorTreatment(chat_id, e);
+        } catch (TelegramApiException e) {
+            log.error("Erro inesperado ao enviar mensagem para chatId={}", chat_id, e);
+        }
+        return tempMessage;
+    }
+
+    public void editTemp(Long chat_id, String texto, Integer tempId) {
+        try {
+            telegramClient.execute(EditMessageText.builder()
+                    .chatId(chat_id)
+                    .messageId(tempId)
+                    .text(texto)
+                    .build());
+        } catch (TelegramApiRequestException e) {
+            errorTreatment(chat_id, e);
+        } catch (TelegramApiException e) {
+            log.error("Erro inesperado ao enviar mensagem para chatId={}", chat_id, e);
+        }
+    }
+
     public void sendMarkupNote(Long chatId, String message, ReplyKeyboard markup) {
         try {
             telegramClient.execute(SendMessage.builder()
@@ -39,7 +71,7 @@ public class TelegramMessageSender {
         } catch (TelegramApiRequestException e) {
             errorTreatment(chatId, e);
         } catch (TelegramApiException e) {
-            log.error("Erro inesperado ao enviar mensagem para chatId={}",chatId,e);
+            log.error("Erro inesperado ao enviar mensagem para chatId={}", chatId, e);
         }
     }
 
