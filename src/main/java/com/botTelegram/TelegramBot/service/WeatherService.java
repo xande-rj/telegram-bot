@@ -32,7 +32,7 @@ public class WeatherService {
     }
 
     private WeatherResponse sendWeather(Long chatId) throws BotUserException {
-        User user = userRepository.findById(chatId).orElseThrow(()-> new BotUserException("User not found"));
+        User user = userRepository.findById(chatId).orElseThrow(()-> new BotUserException("Usuario nao cadastrado, se cadastre no comando /localizacao "));
         try {
             return this.restClient.getRestClient().get()
                     .uri(uriBuilder -> uriBuilder
