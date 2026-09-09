@@ -14,6 +14,7 @@ import java.util.List;
 public class TelegramCommandRegistrar {
     public void registerCommands(TelegramClient telegramClient) throws TelegramApiException {
         List<BotCommand> botCommands = List.of(
+                new BotCommand("start"," ola "),
                 new BotCommand("ola","Mande um oi ao bot."),
                 new BotCommand("tempo","Veja como esta o tempo agora."),
                 new BotCommand("dolar","Cotacao do dolar a partir do real."),
