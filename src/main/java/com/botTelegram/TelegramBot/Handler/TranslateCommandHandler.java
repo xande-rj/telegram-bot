@@ -38,12 +38,15 @@ public class TranslateCommandHandler implements BotCommandHandler {
 
         if (textoCompleto.isEmpty()) {
             telegramMessageSender.sendMessage(chatId, MENSAGEM);
+            return;
         }
 
         String[] partes = textoCompleto.split(" ", 2);
 
         if (partes.length < 2) {
             telegramMessageSender.sendMessage(chatId, MENSAGEM);
+            return;
+
         }
 
         String idioma = partes[0];
