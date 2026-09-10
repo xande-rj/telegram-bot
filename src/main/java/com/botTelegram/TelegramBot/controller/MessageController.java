@@ -1,56 +1,66 @@
 package com.botTelegram.TelegramBot.controller;
 
 import com.botTelegram.TelegramBot.Enum.Coins;
+import com.botTelegram.TelegramBot.Interfaces.BotCommandHandler;
 import com.botTelegram.TelegramBot.entity.User;
 import com.botTelegram.TelegramBot.exception.BotUserException;
-import com.botTelegram.TelegramBot.repository.UserRepository;
-import com.botTelegram.TelegramBot.service.BotService;
+
 
 import com.botTelegram.TelegramBot.service.ConversationStateService;
-import com.botTelegram.TelegramBot.service.RateLimiteService;
-import lombok.extern.slf4j.Slf4j;
+import com.botTelegram.TelegramBot.service.GeoService;
+import com.botTelegram.TelegramBot.service.NoteService;
+
+import com.botTelegram.TelegramBot.service.WeatherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.scheduling.annotation.Scheduled;
+
 import org.springframework.stereotype.Component;
 
-import org.telegram.telegrambots.longpolling.exceptions.TelegramApiErrorResponseException;
-import org.telegram.telegrambots.longpolling.util.DefaultLongPollingUpdateConsumer;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
+
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
 
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
-@Slf4j
 @Component
-public class MessageController extends DefaultLongPollingUpdateConsumer {
-    private final TelegramClient telegramClient;
-    private final String[] MOEDAS_STRING = new String[]{"dolar", "euro", "iene", "yuan"};
-    private final RateLimiteService rateLimiteService;
-    private final String MENSAGEM_LIMITE = "⏳ Você atingiu o limite de comandos. Tente novamente em alguns segundos.";
-
+public class MessageController implements LongPollingSingleThreadUpdateConsumer {
+    private static final Logger log = LoggerFactory.getLogger(MessageController.class);
     private final TelegramMessageSender telegramMessageSender;
-    private final UserRepository  userRepository;
-
-    public MessageController(TelegramClient telegramClient, RateLimiteService rateLimiteService, TelegramMessageSender telegramMessageSender, UserRepository userRepository) {
-        this.telegramClient = telegramClient;
-        this.rateLimiteService = rateLimiteService;
-        this.telegramMessageSender = telegramMessageSender;
-        this.userRepository = userRepository;
-
-    }
-
+    private final Map<String, BotCommandHandler> handlers;
+    private final NoteService noteService;
+    private final GeoService geoService;
+private final WeatherService weatherService;
     @Autowired
     private ConversationStateService conversationStateService;
-    @Autowired
-    private BotService bot;
+
+    public MessageController(
+            TelegramMessageSender telegramMessageSender,
+            List<BotCommandHandler> handlerList,
+            NoteService noteService,
+            GeoService geoService,
+            WeatherService weatherService
+    ) {
+        this.noteService = noteService;
+        Map<String, BotCommandHandler> handlerMap = new HashMap<>();
+        for (BotCommandHandler handler : handlerList) {
+            for (String command : handler.getCommand()) {
+                handlerMap.put(command, handler);
+            }
+        }
+        this.handlers = handlerMap;
+        this.telegramMessageSender = telegramMessageSender;
+        this.geoService = geoService;
+        this.weatherService = weatherService;
+    }
+
 
     @Override
     public void consume(Update update) {
@@ -58,95 +68,60 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
             onUpdateReceived(update.getCallbackQuery());
             return;
         }
-
-        if (update.hasMessage() && update.getMessage().hasText()) {
-
-            long chat_id = update.getMessage().getChatId();
-            Optional<String> estado = conversationStateService.getEstado(chat_id);
-
-            if (estado.isPresent() && estado.get().equals("AGUARDANDO_TEXTO_NOTA")) {
-                String text = update.getMessage().getText();
-                bot.saveNote(text, chat_id);
-                conversationStateService.limparEstado(chat_id);
-                telegramMessageSender.sendMessage(chat_id, "✅ Nota salva!");
-            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_NUMERO_NOTA")) {
-                String text = update.getMessage().getText();
-                boolean sucesso = bot.deleteNote(text, chat_id);
-                if (sucesso) {
-                    conversationStateService.limparEstado(chat_id);
-                    telegramMessageSender.sendMessage(chat_id, "✅ Nota Deletada!");
-                } else {
-                    telegramMessageSender.sendMessage(chat_id, "⚠️ Número inválido. Digite o número correspondente à nota que deseja deletar:");
-                }
-            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_CIDADE")) {
-
-                String text = update.getMessage().getText();
-                if(bot.geoStats(text,chat_id)) {
-                    telegramMessageSender.sendMessage(chat_id, "✅ Criado com sucesso!");
-                }
-                else {
-                    telegramMessageSender.sendMessage(chat_id, "❌ Erro ao cadastra localizacao. Tente novamente em alguns segundos.!");
-                }
-                conversationStateService.limparEstado(chat_id);
-            }
-
-            if (update.getMessage().getText().contains("/")) {
-                String message_text = update.getMessage().getText().split("/")[1];
-
-
-                if (!rateLimiteService.permitir(chat_id)) {
-                    avisarLimite(chat_id);
-                    return;
-                }
-                if (message_text.equalsIgnoreCase("notas")) {
-                    notes(chat_id);
-                } else if (message_text.equalsIgnoreCase("ola")) {
-                    helloWorld(chat_id);
-                } else if (message_text.equalsIgnoreCase("tempo")) {
-                    weather(chat_id);
-                } else if (message_text.equalsIgnoreCase("noticias")) {
-                    news(chat_id);
-                } else if (message_text.contains("traduzir")) {
-                    translate(chat_id, update.getMessage().getText());
-
-                } else if (message_text.equalsIgnoreCase("resumodiario")) {
-                    resumoDiario(chat_id);
-
-                }
-                else if (message_text.equalsIgnoreCase("localizacao")) {
-                    localizacao(chat_id);
-
-                }
-                for (String moeda : MOEDAS_STRING) {
-                    if (message_text.equalsIgnoreCase(moeda)) {
-                        coins(chat_id, moeda);
-                    }
-                }
-
-
-            }
+        if (!update.hasMessage() || !update.getMessage().hasText()) {
+            return;
         }
+
+        Long chatId = update.getMessage().getChatId();
+        try {
+            Optional<String> estado = conversationStateService.getEstado(chatId);
+            if (estado.isPresent() && estado.get().equals("AGUARDANDO_TEXTO_NOTA")) {
+                saveNote(chatId, update);
+                return;
+            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_NUMERO_NOTA")) {
+                deleteNote(chatId, update);
+                return;
+            } else if (estado.isPresent() && estado.get().equals("AGUARDANDO_CIDADE")) {
+                saveGeo(chatId,update);
+                conversationStateService.limparEstado(chatId);
+                return;
+            }
+            processarComando(update, chatId);
+
+        } catch (BotUserException e) {
+            telegramMessageSender.sendMessage(chatId, e.getMessage());
+
+        } catch (Exception e) {
+            log.error("Erro não tratado processando update de chatId={}", chatId, e);
+            telegramMessageSender.sendMessage(chatId, "⚠️ Ocorreu um erro inesperado. Tente novamente.");
+        }
+
     }
-    private void localizacao(long chat_id) {
-        conversationStateService.definirEstado(chat_id, "AGUARDANDO_CIDADE");
-        telegramMessageSender.sendMessage(chat_id, "🏙️ Digite o nome da sua cidade (ex: São Paulo):");
-    }
-    private void resumoDiario(long chat_id) {
-        if(userRepository.findById(chat_id).isPresent()) {
-            User user = userRepository.findById(chat_id).get();
-            user.setResumoDiarioAtivo(!user.isResumoDiarioAtivo());
-            userRepository.save(user);
-            String status = user.isResumoDiarioAtivo() ? "ativado ✅" : "desativado ❌";
-            telegramMessageSender.sendMessage(chat_id,status);
+
+    private void saveGeo(Long chatId, Update update) {
+        if(this.geoService.saveGeo(chatId,update)){
+            telegramMessageSender.sendMessage(chatId, "✅ Criado com sucesso!");
+            telegramMessageSender.sendMessage(chatId, this.weatherService.getWeather(chatId));
         }
         else {
-            User user = new User();
-            user.setChatId(chat_id);
-            user.setResumoDiarioAtivo(true);
-            userRepository.save(user);
-            String status = user.isResumoDiarioAtivo() ? "ativado ✅" : "desativado ❌";
-            telegramMessageSender.sendMessage(chat_id, status);
+            telegramMessageSender.sendMessage(chatId, "❌ Erro ao cadastra localizacao. Tente novamente em alguns segundos.!");
         }
+
+    }
+
+    public void saveNote(Long chatId, Update update) {
+        String text = update.getMessage().getText();
+        noteService.save(text, chatId);
+        conversationStateService.limparEstado(chatId);
+        telegramMessageSender.sendMessage(chatId, "✅ Nota salva!");
+
+    }
+
+    public void deleteNote(Long chatId, Update update) {
+        String text = update.getMessage().getText();
+        noteService.delete(text, chatId);
+        conversationStateService.limparEstado(chatId);
+        telegramMessageSender.sendMessage(chatId, "✅ Nota deletada!");
     }
 
     public void onUpdateReceived(CallbackQuery update) {
@@ -155,102 +130,31 @@ public class MessageController extends DefaultLongPollingUpdateConsumer {
 
         if (callBack.equalsIgnoreCase("save")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_TEXTO_NOTA");
-            telegramMessageSender.sendMessage(chatId, "📝 Digite o texto da sua nota:");
+            telegramMessageSender.sendMessage(chatId, "📝 Digite o text  o da sua nota:");
 
         } else if (callBack.equalsIgnoreCase("get")) {
-            telegramMessageSender.sendMessage(chatId, bot.getNotes(chatId));
+            telegramMessageSender.sendMessage(chatId, noteService.findAll(chatId));
 
         } else if (callBack.equalsIgnoreCase("delete")) {
             conversationStateService.definirEstado(chatId, "AGUARDANDO_NUMERO_NOTA");
-            telegramMessageSender.sendMessage(chatId, "📝 Digite o numero da nota que deseja deletar:");
-            telegramMessageSender.sendMessage(chatId, bot.getNotes(chatId));
+            telegramMessageSender.sendMessage(chatId, noteService.findAll(chatId));
 
         }
     }
 
-    public void translate(long chat_id, String text) {
+    private void processarComando(Update update, Long chatId) throws Exception {
+        String texto = update.getMessage().getText();
+        String comando = texto.split(" ")[0];
+        BotCommandHandler handler = handlers.get(comando);
 
-        String textoCompleto = text.replaceFirst("/traduzir\\s*", "").trim();
-        String mensagem =
-                "Use assim: /traduzir <idioma> <texto>\nEx: /traduzir inglês Bom dia!";
-        if (textoCompleto.isEmpty()) {
-            telegramMessageSender.sendMessage(chat_id, mensagem);
-        }
-        String[] partes = textoCompleto.split(" ", 2);
-        if (partes.length < 2) {
-            telegramMessageSender.sendMessage(chat_id, mensagem);
-        }
-        String idioma = partes[0];
-        String texto = partes[1];
 
-        try {
-            Message temp = telegramClient.execute(SendMessage.builder()
-                    .chatId(chat_id)
-                    .text("🌐 Traduzindo para " + idioma + "...")
-                    .build());
-
-            String traducao = bot.translate(idioma, texto);
-
-            telegramClient.execute(EditMessageText.builder()
-                    .chatId(chat_id)
-                    .messageId(temp.getMessageId())
-                    .text(traducao)
-                    .build());
-
-        } catch (TelegramApiException e) {
-            log.error("Erro inesperado ao traduzir", e);
-            throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente.");
+        if (handler == null) {
+            telegramMessageSender.sendMessage(chatId, "Comando não reconhecido. Use /start pra ver as opções.");
+            return;
         }
 
-
-    }
-
-    public void notes(long chat_id) {
-        try {
-            InlineKeyboardMarkup markup = bot.getNoteMarkup();
-            SendMessage message = bot.sendMarkup(chat_id, "Notas: ", markup);
-            telegramClient.execute(message);
-        } catch (TelegramApiErrorResponseException e) {
-            log.error("Erro inesperado na resposta da api", e);
-            throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente.");
-        } catch (TelegramApiException e) {
-            log.error("Erro inesperado na api", e);
-            throw new BotUserException("⚠\uFE0F Algo deu errado. Tente novamente.");
-        }
-    }
-
-    public void avisarLimite(long chat_id) {
-        telegramMessageSender.sendMessage(chat_id, MENSAGEM_LIMITE);
-
-    }
-
-    private void news(long chat_id) {
-
-        telegramMessageSender.sendMessage(
-                chat_id,
-                bot.getNews()
-        );
-    }
-
-    private void helloWorld(long chat_id) {
-        telegramMessageSender.sendMessage(
-                chat_id,
-                "Olá! Como posso ajudar?"
-        );
-    }
-
-    private void weather(long chat_id) {
-        telegramMessageSender.sendMessage(
-                chat_id,
-                bot.getWeather()
-        );
-    }
-
-    private void coins(long chat_id, String moeda) {
-        telegramMessageSender.sendMessage(
-                chat_id,
-                bot.getPrice(Coins.valueOf(moeda.toUpperCase()).getCoin())
-        );
+        handler.handle(update, null);
+        
     }
 
 }

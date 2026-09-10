@@ -50,7 +50,7 @@ public class DailySummaryScheduler {
     public String montarResumo(User usuario){
         String news = this.newsService.getNews();
         String Price = this.priceService.getPrice(Coins.DOLAR.getCoin());
-        String weather = this.weatherService.getWeather();
+        String weather = this.weatherService.getWeather(usuario.getChatId());
         return """
             ☀️ Bom dia! Aqui está seu resumo:
 

@@ -1,6 +1,8 @@
 package com.botTelegram.TelegramBot.service;
 
+import com.botTelegram.TelegramBot.entity.User;
 import com.botTelegram.TelegramBot.exception.BotUserException;
+import com.botTelegram.TelegramBot.repository.UserRepository;
 import com.botTelegram.TelegramBot.response.WeatherResponse.WeatherResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,33 +16,29 @@ import java.util.Map;
 public class WeatherService {
     private final String WEATHER_URL;
     private final ClientService restClient;
-    private final String lat;
-    private final String lon;
     private final String appid;
+    private final UserRepository userRepository;
 
     public WeatherService(@Value("${weather_url}")String weather_url,
-                          @Value("${latitude}") String lat,
-                          @Value("${longitude}") String lon,
-                          @Value("${weather.token}") String appid
+                          @Value("${weather.token}") String appid,
+                          UserRepository userRepository
 
                           )
     {
         this.WEATHER_URL = weather_url;
         this.restClient = new ClientService(WEATHER_URL);
-        this.lat = lat;
-        this.lon = lon;
         this.appid = appid;
+        this.userRepository = userRepository;
     }
 
-    private WeatherResponse sendWeather() {
+    private WeatherResponse sendWeather(Long chatId) throws BotUserException {
+        User user = userRepository.findById(chatId).orElseThrow(()-> new BotUserException("Usuario nao cadastrado, se cadastre no comando /localizacao "));
         try {
-
-
             return this.restClient.getRestClient().get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/weather")
-                            .queryParam("lat", lat)
-                            .queryParam("lon", lon)
+                            .queryParam("lat", user.getLatitude())
+                            .queryParam("lon", user.getLongitude())
                             .queryParam("appid", appid).build()
                     ).retrieve()
                     .body(WeatherResponse.class);
@@ -53,8 +51,8 @@ public class WeatherService {
     }
     }
 
-    public String getWeather() {
-        WeatherResponse  weather = sendWeather();
+    public String getWeather(Long chatId) {
+        WeatherResponse  weather = sendWeather(chatId);
         String mensagem = """
                         🌎 Cidade: %s
                         🌡️ Temperatura: %.1f°C

@@ -70,9 +70,7 @@ public class NoteService {
 
         Note note = notes.get(indice - 1);
         noteRepository.delete(note);
-        System.out.println("Note Deletado!" + note.getChatId());
 
-        System.out.println("Note Deletado!" + note.getText());
         return true;
     }
 
